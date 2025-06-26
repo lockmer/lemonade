@@ -40,31 +40,45 @@
     <p>Find lemonade near you! Check the map below for our current location and come grab a refreshing drink!</p>
     <div id="map"></div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+    <!-- Leaflet.js -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Initialize the map
-        var map = L.map('map').setView([51.505, -0.09], 13); // Default to a sample location (London)
+        // Initialize Firebase (replace with your Firebase config)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCLKalm4eWV5L8IHEePlBZGaFwPN0RuyVM",
+            authDomain: "lemonade-bdb2f.firebaseapp.com",
+            databaseURL: "https://lemonade-bdb2f-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: ""lemonade-bdb2f"",
+            storageBucket: "lemonade-bdb2f.firebasestorage.app",
+            messagingSenderId: "557489157751",
+            appId: "1:557489157751:web:d76a36ec0e942249a67872"
+            measurementId: "G-6NQ028JLGK"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-        // Add OpenStreetMap tiles
+        // Initialize the map with Berlin coordinates
+        const map = L.map('map').setView([52.5200, 13.4050], 13); // Berlin
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
         // Add a marker for the lemonade stand
-        var marker = L.marker([51.505, -0.09]).addTo(map);
+        const marker = L.marker([52.5200, 13.4050]).addTo(map);
         marker.bindPopup("<b>Lemonade Stand</b><br>Here we are!").openPopup();
 
-        // Simulate location updates (replace with real location data)
-        function updateStandLocation(lat, lng) {
-            marker.setLatLng([lat, lng]);
-            map.panTo([lat, lng]);
-            marker.bindPopup("<b>Lemonade Stand</b><br>Updated location!").openPopup();
-        }
-
-        // Example: Simulate movement after 5 seconds (replace with real data)
-        setTimeout(() => {
-            updateStandLocation(51.51, -0.1); // Simulated new location
-        }, 5000);
+        // Listen for real-time location updates from Firebase
+        database.ref('stand/location').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.lat && data.lng) {
+                marker.setLatLng([data.lat, data.lng]);
+                map.panTo([data.lat, data.lng]);
+                marker.bindPopup("<b>Lemonade Stand</b><br>Updated location!").openPopup();
+            }
+        });
     </script>
 </body>
 </html>
