@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Lemonade Stand Location</title>
+</head>
+<body>
+    <h1>Update Lemonade Stand Location</h1>
+    <form id="locationForm">
+        <label>Latitude: <input type="number" step="any" id="lat" required></label><br>
+        <label>Longitude: <input type="number" step="any" id="lng" required></label><br>
+        <button type="submit">Update Location</button>
+    </form>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCLKalm4eWV5L8IHEePlBZGaFwPN0RuyVM",
+            authDomain: "lemonade-bdb2f.firebaseapp.com",
+            databaseURL: "https://lemonade-bdb2f-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "lemonade-bdb2f",
+            storageBucket: "lemonade-bdb2f.firebasestorage.app",
+            messagingSenderId: "557489157751",
+            appId: "1:557489157751:web:d76a36ec0e942249a67872",
+            measurementId: "G-6NQ028JLGK"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        document.getElementById('locationForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const lat = parseFloat(document.getElementById('lat').value);
+            const lng = parseFloat(document.getElementById('lng').value);
+            database.ref('stand/location').set({ lat, lng })
+                .then(() => alert('Location updated!'))
+                .catch(error => alert('Error: ' + error.message));
+        });
+    </script>
+</body>
+</html>
