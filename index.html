@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lemonade Stand Locator</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
     <style>
         body {
             margin: 0;
@@ -40,11 +40,11 @@
     <p>Find lemonade near you! Check the map below for our current location and come grab a refreshing drink!</p>
     <div id="map"></div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+    <!-- Firebase Compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <!-- Leaflet.js -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <script>
         // Initialize Firebase with your config
         const firebaseConfig = {
@@ -69,16 +69,6 @@
         // Add a marker for the lemonade stand
         const marker = L.marker([52.5200, 13.4050]).addTo(map);
         marker.bindPopup("<b>Lemonade Stand</b><br>Here we are!").openPopup();
-
-        // Listen for real-time location updates from Firebase
-        database.ref('stand/location').on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data && data.lat && data.lng) {
-                marker.setLatLng([data.lat, data.lng]);
-                map.panTo([data.lat, data.lng]);
-                marker.bindPopup("<b>Lemonade Stand</b><br>Updated location!").openPopup();
-            }
-        });
     </script>
 </body>
 </html>
