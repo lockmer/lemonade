@@ -75,9 +75,21 @@
         <input type="number" id="latitude" placeholder="Latitude" step="any">
         <input type="number" id="longitude" placeholder="Longitude" step="any">
         <select id="markerIcon">
-            <option value="lemon">Lemon Icon</option>
-            <option value="star">Star Icon</option>
-            <option value="pin">Pin Icon</option>
+            <option value="pin-blue">Pin Blue</option>
+            <option value="pin-red">Pin Red</option>
+            <option value="pin-green">Pin Green</option>
+            <option value="pin-yellow">Pin Yellow</option>
+            <option value="pin-purple">Pin Purple</option>
+            <option value="circle-blue">Circle Blue</option>
+            <option value="circle-red">Circle Red</option>
+            <option value="circle-green">Circle Green</option>
+            <option value="circle-yellow">Circle Yellow</option>
+            <option value="circle-purple">Circle Purple</option>
+            <option value="square-blue">Square Blue</option>
+            <option value="square-red">Square Red</option>
+            <option value="square-green">Square Green</option>
+            <option value="square-yellow">Square Yellow</option>
+            <option value="square-purple">Square Purple</option>
         </select>
         <textarea id="bio" placeholder="Short bio (max 200 characters)" maxlength="200"></textarea>
         <input type="file" id="photos" accept="image/*" multiple>
@@ -136,13 +148,16 @@
                     const user = userCredential.user;
                     database.ref('stands/' + user.uid + '/location').set({
                         name: name,
-                        status: 'out_of_service',
-                        markerIcon: 'lemon',
+                        status: 'active', // Default to active for new accounts
+                        markerIcon: 'pin-blue', // Default to pin-blue
                         bio: '',
                         photos: []
+                    }).then(() => {
+                        showMessage('Sign-up successful! Loading customization...', 'success');
+                        setTimeout(showCustomize, 1000);
+                    }).catch(error => {
+                        showMessage('Database error during sign-up: ' + error.message, 'error');
                     });
-                    showMessage('Sign-up successful! Loading customization...', 'success');
-                    setTimeout(showCustomize, 1000);
                 })
                 .catch(error => {
                     showMessage('Sign-up error: ' + error.message, 'error');
@@ -172,10 +187,14 @@
                             document.getElementById('stand-name').value = data.name || '';
                             document.getElementById('latitude').value = data.lat || '';
                             document.getElementById('longitude').value = data.lng || '';
-                            document.getElementById('markerIcon').value = data.markerIcon || 'lemon';
+                            document.getElementById('markerIcon').value = data.markerIcon || 'pin-blue';
                             document.getElementById('bio').value = data.bio || '';
                             document.getElementById('outOfService').checked = data.status === 'out_of_service';
+                        } else {
+                            showMessage('No stand data found, please update your stand', 'error');
                         }
+                    }).catch(error => {
+                        showMessage('Error loading data: ' + error.message, 'error');
                     });
             }
         }
@@ -187,8 +206,8 @@
                 showLogin();
                 return;
             }
-            const lat = parseFloat(document.getElementById('latitude').value);
-            const lng = parseFloat(document.getElementById('longitude').value);
+            const latInput = document.getElementById('latitude').value;
+            const lngInput = document.getElementById('longitude').value;
             const name = document.getElementById('stand-name').value;
             const markerIcon = document.getElementById('markerIcon').value;
             const bio = document.getElementById('bio').value;
@@ -199,49 +218,80 @@
                 showMessage('Stand name is required', 'error');
                 return;
             }
+            if ((latInput && !lngInput) || (!latInput && lngInput)) {
+                showMessage('Both latitude and longitude are required if one is provided', 'error');
+                return;
+            }
+
+            const lat = latInput ? parseFloat(latInput) : null;
+            const lng = lngInput ? parseFloat(lngInput) : null;
+
+            if (latInput && (isNaN(lat) || lat < -90 || lat > 90)) {
+                showMessage('Invalid latitude (must be between -90 and 90)', 'error');
+                return;
+            }
+            if (lngInput && (isNaN(lng) || lng < -180 || lng > 180)) {
+                showMessage('Invalid longitude (must be between -180 and 180)', 'error');
+                return;
+            }
 
             const updates = {
                 name: name,
                 status: outOfService ? 'out_of_service' : 'active',
                 markerIcon: markerIcon,
-                bio: bio
+                bio: bio,
+                photos: [] // Default to empty array
             };
-            if (lat && lng) {
+            if (lat !== null && lng !== null) {
                 updates.lat = lat;
                 updates.lng = lng;
             }
 
-            const uploadPromises = [];
-            const photoUrls = [];
+            // Save updates even if photos fail
+            database.ref('stands/' + user.uid + '/location').set(updates)
+                .then(() => {
+                    showMessage('Stand updated successfully!', 'success');
+                })
+                .catch(error => {
+                    showMessage('Update error: ' + error.message, 'error');
+                });
+
+            // Handle photo uploads separately
             if (photos.length > 0) {
                 if (photos.length > 3) {
                     showMessage('Maximum 3 photos allowed', 'error');
                     return;
                 }
+                const uploadPromises = [];
+                const photoUrls = [];
                 Array.from(photos).forEach((file, index) => {
                     const storageRef = storage.ref(`stands/${user.uid}/photo${index + 1}`);
                     uploadPromises.push(
-                        storageRef.put(file).then(() => storageRef.getDownloadURL().then(url => {
-                            photoUrls[index] = url;
-                        }))
+                        storageRef.put(file).then(() => {
+                            return storageRef.getDownloadURL().then(url => {
+                                photoUrls[index] = url;
+                            }).catch(error => {
+                                console.error('Failed to get download URL for photo ' + (index + 1) + ':', error);
+                            });
+                        }).catch(error => {
+                            console.error('Failed to upload photo ' + (index + 1) + ':', error);
+                        })
                     );
                 });
+                Promise.all(uploadPromises).then(() => {
+                    if (photoUrls.length > 0) {
+                        database.ref('stands/' + user.uid + '/location').update({
+                            photos: photoUrls.filter(url => url)
+                        }).then(() => {
+                            showMessage('Photos updated successfully!', 'success');
+                        }).catch(error => {
+                            showMessage('Photo update error: ' + error.message, 'error');
+                        });
+                    }
+                }).catch(error => {
+                    showMessage('Photo upload error: ' + error.message, 'error');
+                });
             }
-
-            Promise.all(uploadPromises).then(() => {
-                if (photoUrls.length > 0) {
-                    updates.photos = photoUrls.filter(url => url);
-                }
-                database.ref('stands/' + user.uid + '/location').set(updates)
-                    .then(() => {
-                        showMessage('Stand updated!', 'success');
-                    })
-                    .catch(error => {
-                        showMessage('Update error: ' + error.message, 'error');
-                    });
-            }).catch(error => {
-                showMessage('Photo upload error: ' + error.message, 'error');
-            });
         }
 
         function signOut() {
@@ -259,6 +309,7 @@
             const statusMessage = document.getElementById('status-message');
             statusMessage.textContent = message;
             statusMessage.className = type;
+            setTimeout(clearMessage, 3000); // Clear message after 3 seconds
         }
 
         function clearMessage() {
@@ -276,7 +327,7 @@
                 document.getElementById('stand-name').value = '';
                 document.getElementById('latitude').value = '';
                 document.getElementById('longitude').value = '';
-                document.getElementById('markerIcon').value = 'lemon';
+                document.getElementById('markerIcon').value = 'pin-blue';
                 document.getElementById('bio').value = '';
                 document.getElementById('outOfService').checked = false;
             }
