@@ -50,7 +50,7 @@
         button:hover {
             background-color: #333;
         }
-        #status-message {
+        .status-message {
             margin-top: 10px;
             font-size: 1em;
             text-align: center;
@@ -68,7 +68,7 @@
         <button onclick="signUp()">Sign Up</button>
         <button onclick="signIn()">Sign In</button>
         <button onclick="signOut()">Back to Map</button>
-        <p id="status-message"></p>
+        <p id="login-status-message" class="status-message"></p>
     </div>
     <div id="customize-container" class="container">
         <input type="text" id="stand-name" placeholder="Stand Name" required>
@@ -96,7 +96,7 @@
         <label><input type="checkbox" id="outOfService"> Out of Service</label>
         <button onclick="updateLocation()">Update Stand</button>
         <button onclick="signOut()">Sign Out</button>
-        <p id="status-message"></p>
+        <p id="customize-status-message" class="status-message"></p>
     </div>
 
     <!-- Firebase Compat SDK -->
@@ -125,14 +125,14 @@
             document.getElementById('login-container').classList.add('active');
             document.getElementById('customize-container').classList.remove('active');
             document.getElementById('page-title').textContent = 'Lemonade Stand Login';
-            clearMessage();
+            clearMessages();
         }
 
         function showCustomize() {
             document.getElementById('login-container').classList.remove('active');
             document.getElementById('customize-container').classList.add('active');
             document.getElementById('page-title').textContent = 'Customize Your Stand';
-            clearMessage();
+            clearMessages();
         }
 
         function signUp() {
@@ -140,7 +140,7 @@
             const password = document.getElementById('password').value;
             const name = document.getElementById('name').value;
             if (!email || !password || !name) {
-                showMessage('Please fill in all fields', 'error');
+                showMessage('login', 'Please fill in all fields', 'error');
                 return;
             }
             auth.createUserWithEmailAndPassword(email, password)
@@ -148,19 +148,19 @@
                     const user = userCredential.user;
                     database.ref('stands/' + user.uid + '/location').set({
                         name: name,
-                        status: 'active', // Default to active for new accounts
-                        markerIcon: 'pin-blue', // Default to pin-blue
+                        status: 'active',
+                        markerIcon: 'pin-blue',
                         bio: '',
                         photos: []
                     }).then(() => {
-                        showMessage('Sign-up successful! Loading customization...', 'success');
+                        showMessage('login', 'Sign-up successful! Loading customization...', 'success');
                         setTimeout(showCustomize, 1000);
                     }).catch(error => {
-                        showMessage('Database error during sign-up: ' + error.message, 'error');
+                        showMessage('login', 'Database error during sign-up: ' + error.message, 'error');
                     });
                 })
                 .catch(error => {
-                    showMessage('Sign-up error: ' + error.message, 'error');
+                    showMessage('login', 'Sign-up error: ' + error.message, 'error');
                 });
         }
 
@@ -169,11 +169,11 @@
             const password = document.getElementById('password').value;
             auth.signInWithEmailAndPassword(email, password)
                 .then(() => {
-                    showMessage('Signed in successfully! Loading customization...', 'success');
+                    showMessage('login', 'Signed in successfully! Loading customization...', 'success');
                     setTimeout(showCustomize, 1000);
                 })
                 .catch(error => {
-                    showMessage('Sign-in error: ' + error.message, 'error');
+                    showMessage('login', 'Sign-in error: ' + error.message, 'error');
                 });
         }
 
@@ -191,10 +191,10 @@
                             document.getElementById('bio').value = data.bio || '';
                             document.getElementById('outOfService').checked = data.status === 'out_of_service';
                         } else {
-                            showMessage('No stand data found, please update your stand', 'error');
+                            showMessage('customize', 'No stand data found, please update your stand', 'error');
                         }
                     }).catch(error => {
-                        showMessage('Error loading data: ' + error.message, 'error');
+                        showMessage('customize', 'Error loading data: ' + error.message, 'error');
                     });
             }
         }
@@ -202,7 +202,7 @@
         function updateLocation() {
             const user = auth.currentUser;
             if (!user) {
-                showMessage('Please sign in first', 'error');
+                showMessage('login', 'Please sign in first', 'error');
                 showLogin();
                 return;
             }
@@ -215,11 +215,11 @@
             const photos = document.getElementById('photos').files;
 
             if (!name) {
-                showMessage('Stand name is required', 'error');
+                showMessage('customize', 'Stand name is required', 'error');
                 return;
             }
             if ((latInput && !lngInput) || (!latInput && lngInput)) {
-                showMessage('Both latitude and longitude are required if one is provided', 'error');
+                showMessage('customize', 'Both latitude and longitude are required if one is provided', 'error');
                 return;
             }
 
@@ -227,11 +227,11 @@
             const lng = lngInput ? parseFloat(lngInput) : null;
 
             if (latInput && (isNaN(lat) || lat < -90 || lat > 90)) {
-                showMessage('Invalid latitude (must be between -90 and 90)', 'error');
+                showMessage('customize', 'Invalid latitude (must be between -90 and 90)', 'error');
                 return;
             }
             if (lngInput && (isNaN(lng) || lng < -180 || lng > 180)) {
-                showMessage('Invalid longitude (must be between -180 and 180)', 'error');
+                showMessage('customize', 'Invalid longitude (must be between -180 and 180)', 'error');
                 return;
             }
 
@@ -240,26 +240,27 @@
                 status: outOfService ? 'out_of_service' : 'active',
                 markerIcon: markerIcon,
                 bio: bio,
-                photos: [] // Default to empty array
+                photos: []
             };
             if (lat !== null && lng !== null) {
                 updates.lat = lat;
                 updates.lng = lng;
             }
 
-            // Save updates even if photos fail
+            console.log('Attempting to update stand with:', updates);
             database.ref('stands/' + user.uid + '/location').set(updates)
                 .then(() => {
-                    showMessage('Stand updated successfully!', 'success');
+                    showMessage('customize', 'Stand updated successfully!', 'success');
+                    console.log('Stand update successful');
                 })
                 .catch(error => {
-                    showMessage('Update error: ' + error.message, 'error');
+                    showMessage('customize', 'Update error: ' + error.message, 'error');
+                    console.error('Stand update failed:', error);
                 });
 
-            // Handle photo uploads separately
             if (photos.length > 0) {
                 if (photos.length > 3) {
-                    showMessage('Maximum 3 photos allowed', 'error');
+                    showMessage('customize', 'Maximum 3 photos allowed', 'error');
                     return;
                 }
                 const uploadPromises = [];
@@ -270,11 +271,12 @@
                         storageRef.put(file).then(() => {
                             return storageRef.getDownloadURL().then(url => {
                                 photoUrls[index] = url;
+                                console.log(`Photo ${index + 1} uploaded: ${url}`);
                             }).catch(error => {
-                                console.error('Failed to get download URL for photo ' + (index + 1) + ':', error);
+                                console.error(`Failed to get download URL for photo ${index + 1}:`, error);
                             });
                         }).catch(error => {
-                            console.error('Failed to upload photo ' + (index + 1) + ':', error);
+                            console.error(`Failed to upload photo ${index + 1}:`, error);
                         })
                     );
                 });
@@ -283,13 +285,16 @@
                         database.ref('stands/' + user.uid + '/location').update({
                             photos: photoUrls.filter(url => url)
                         }).then(() => {
-                            showMessage('Photos updated successfully!', 'success');
+                            showMessage('customize', 'Photos updated successfully!', 'success');
+                            console.log('Photos update successful');
                         }).catch(error => {
-                            showMessage('Photo update error: ' + error.message, 'error');
+                            showMessage('customize', 'Photo update error: ' + error.message, 'error');
+                            console.error('Photos update failed:', error);
                         });
                     }
                 }).catch(error => {
-                    showMessage('Photo upload error: ' + error.message, 'error');
+                    showMessage('customize', 'Photo upload error: ' + error.message, 'error');
+                    console.error('Photo uploads failed:', error);
                 });
             }
         }
@@ -297,25 +302,30 @@
         function signOut() {
             auth.signOut()
                 .then(() => {
-                    showMessage('Sign out successful, redirecting to map...', 'success');
+                    showMessage('login', 'Sign out successful, redirecting to map...', 'success');
                     setTimeout(() => window.location.href = '/', 1000);
                 })
                 .catch(error => {
-                    showMessage('Sign out error: ' + error.message, 'error');
+                    showMessage('login', 'Sign out error: ' + error.message, 'error');
                 });
         }
 
-        function showMessage(message, type) {
-            const statusMessage = document.getElementById('status-message');
+        function showMessage(container, message, type) {
+            const statusMessage = document.getElementById(container + '-status-message');
             statusMessage.textContent = message;
-            statusMessage.className = type;
-            setTimeout(clearMessage, 3000); // Clear message after 3 seconds
+            statusMessage.className = 'status-message ' + type;
+            setTimeout(() => clearMessage(container), 5000); // Clear after 5 seconds
         }
 
-        function clearMessage() {
-            const statusMessage = document.getElementById('status-message');
+        function clearMessage(container) {
+            const statusMessage = document.getElementById(container + '-status-message');
             statusMessage.textContent = '';
-            statusMessage.className = '';
+            statusMessage.className = 'status-message';
+        }
+
+        function clearMessages() {
+            clearMessage('login');
+            clearMessage('customize');
         }
 
         auth.onAuthStateChanged(user => {
