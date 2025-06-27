@@ -55,6 +55,57 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            font-size: 20px;
+        }
+        .star-icon::before {
+            content: '\2605';
+            display: block;
+        }
+        .heart-icon::before {
+            content: '\2764';
+            display: block;
+        }
+        .diamond-icon {
+            transform: rotate(45deg);
+        }
+        .triangle-icon {
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 20px solid;
+        }
+        .hexagon-icon {
+            width: 20px;
+            height: 11.5px;
+            position: relative;
+            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+        }
+        .octagon-icon {
+            width: 20px;
+            height: 20px;
+            clip-path: polygon(29.29% 0%, 70.71% 0%, 100% 29.29%, 100% 70.71%, 70.71% 100%, 29.29% 100%, 0% 70.71%, 0% 29.29%);
+        }
+        .cross-icon {
+            width: 20px;
+            height: 20px;
+            position: relative;
+        }
+        .cross-icon::before, .cross-icon::after {
+            content: '';
+            position: absolute;
+            background: currentColor;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .cross-icon::before {
+            width: 20px;
+            height: 4px;
+        }
+        .cross-icon::after {
+            width: 4px;
+            height: 20px;
         }
     </style>
 </head>
@@ -68,7 +119,6 @@
     <!-- Leaflet.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <script>
-        // Initialize Firebase with your config
         const firebaseConfig = {
             apiKey: "AIzaSyCLKalm4eWV5L8IHEePlBZGaFwPN0RuyVM",
             authDomain: "lemonade-bdb2f.firebaseapp.com",
@@ -84,13 +134,11 @@
             const database = firebase.database();
             console.log("Firebase initialized successfully");
 
-            // Initialize the map with Berlin coordinates
-            const map = L.map('map').setView([52.5200, 13.4050], 13); // Berlin
+            const map = L.map('map').setView([52.5200, 13.4050], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
-            // Define custom marker icons
             const icons = {
                 'pin-blue': L.icon({
                     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -118,6 +166,12 @@
                 }),
                 'pin-purple': L.icon({
                     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34]
+                }),
+                'pin-orange': L.icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png',
                     iconSize: [25, 41],
                     iconAnchor: [12, 41],
                     popupAnchor: [1, -34]
@@ -157,6 +211,13 @@
                     iconAnchor: [10, 10],
                     popupAnchor: [0, -10]
                 }),
+                'circle-orange': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<div style="background-color: orange; width: 20px; height: 20px; border-radius: 50%; border: 2px solid black;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
                 'square-blue': L.divIcon({
                     className: 'custom-div-icon',
                     html: '<div style="background-color: blue; width: 20px; height: 20px; border: 2px solid black;"></div>',
@@ -191,18 +252,736 @@
                     iconSize: [20, 20],
                     iconAnchor: [10, 10],
                     popupAnchor: [0, -10]
+                }),
+                'square-orange': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<div style="background-color: orange; width: 20px; height: 20px; border: 2px solid black;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'star-blue': L.divIcon({
+                    className: 'custom-div-icon star-icon',
+                    html: '<div style="color: blue; font-size: 20px;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'star-red': L.divIcon({
+                    className: 'custom-div-icon star-icon',
+                    html: '<div style="color: red; font-size: 20px;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'star-green': L.divIcon({
+                    className: 'custom-div-icon star-icon',
+                    html: '<div style="color: green; font-size: 20px;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'star-yellow': L.divIcon({
+                    className: 'custom-div-icon star-icon',
+                    html: '<div style="color: yellow; font-size: 20px;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'star-purple': L.divIcon({
+                    className: 'custom-div-icon star-icon',
+                    html: '<div style="color: purple; font-size: 20px;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'star-orange': L.divIcon({
+                    className: 'custom-div-icon star-icon',
+                    html: '<div style="color: orange; font-size: 20px;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'heart-blue': L.divIcon({
+                    className: 'custom-div-icon heart-icon',
+                    html: '<div style="color: blue; font-size: 20px;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'heart-red': L.divIcon({
+                    className: 'custom-div-icon heart-icon',
+                    html: '<div style="color: red; font-size: 20px;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'heart-green': L.divIcon({
+                    className: 'custom-div-icon heart-icon',
+                    html: '<div style="color: green; font-size: 20px;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'heart-yellow': L.divIcon({
+                    className: 'custom-div-icon heart-icon',
+                    html: '<div style="color: yellow; font-size: 20px;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'heart-purple': L.divIcon({
+                    className: 'custom-div-icon heart-icon',
+                    html: '<div style="color: purple; font-size: 20px;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'heart-orange': L.divIcon({
+                    className: 'custom-div-icon heart-icon',
+                    html: '<div style="color: orange; font-size: 20px;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'diamond-blue': L.divIcon({
+                    className: 'custom-div-icon diamond-icon',
+                    html: '<div style="background-color: blue; width: 20px; height: 20px; border: 2px solid black;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'diamond-red': L.divIcon({
+                    className: 'custom-div-icon diamond-icon',
+                    html: '<div style="background-color: red; width: 20px; height: 20px; border: 2px solid black;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'diamond-green': L.divIcon({
+                    className: 'custom-div-icon diamond-icon',
+                    html: '<div style="background-color: green; width: 20px; height: 20px; border: 2px solid black;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'diamond-yellow': L.divIcon({
+                    className: 'custom-div-icon diamond-icon',
+                    html: '<div style="background-color: yellow; width: 20px; height: 20px; border: 2px solid black;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'diamond-purple': L.divIcon({
+                    className: 'custom-div-icon diamond-icon',
+                    html: '<div style="background-color: purple; width: 20px; height: 20px; border: 2px solid black;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'diamond-orange': L.divIcon({
+                    className: 'custom-div-icon diamond-icon',
+                    html: '<div style="background-color: orange; width: 20px; height: 20px; border: 2px solid black;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'triangle-blue': L.divIcon({
+                    className: 'custom-div-icon triangle-icon',
+                    html: '<div style="border-bottom-color: blue;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 20],
+                    popupAnchor: [0, -20]
+                }),
+                'triangle-red': L.divIcon({
+                    className: 'custom-div-icon triangle-icon',
+                    html: '<div style="border-bottom-color: red;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 20],
+                    popupAnchor: [0, -20]
+                }),
+                'triangle-green': L.divIcon({
+                    className: 'custom-div-icon triangle-icon',
+                    html: '<div style="border-bottom-color: green;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 20],
+                    popupAnchor: [0, -20]
+                }),
+                'triangle-yellow': L.divIcon({
+                    className: 'custom-div-icon triangle-icon',
+                    html: '<div style="border-bottom-color: yellow;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 20],
+                    popupAnchor: [0, -20]
+                }),
+                'triangle-purple': L.divIcon({
+                    className: 'custom-div-icon triangle-icon',
+                    html: '<div style="border-bottom-color: purple;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 20],
+                    popupAnchor: [0, -20]
+                }),
+                'triangle-orange': L.divIcon({
+                    className: 'custom-div-icon triangle-icon',
+                    html: '<div style="border-bottom-color: orange;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 20],
+                    popupAnchor: [0, -20]
+                }),
+                'hexagon-blue': L.divIcon({
+                    className: 'custom-div-icon hexagon-icon',
+                    html: '<div style="background-color: blue;"></div>',
+                    iconSize: [20, 11.5],
+                    iconAnchor: [10, 5.75],
+                    popupAnchor: [0, -5.75]
+                }),
+                'hexagon-red': L.divIcon({
+                    className: 'custom-div-icon hexagon-icon',
+                    html: '<div style="background-color: red;"></div>',
+                    iconSize: [20, 11.5],
+                    iconAnchor: [10, 5.75],
+                    popupAnchor: [0, -5.75]
+                }),
+                'hexagon-green': L.divIcon({
+                    className: 'custom-div-icon hexagon-icon',
+                    html: '<div style="background-color: green;"></div>',
+                    iconSize: [20, 11.5],
+                    iconAnchor: [10, 5.75],
+                    popupAnchor: [0, -5.75]
+                }),
+                'hexagon-yellow': L.divIcon({
+                    className: 'custom-div-icon hexagon-icon',
+                    html: '<div style="background-color: yellow;"></div>',
+                    iconSize: [20, 11.5],
+                    iconAnchor: [10, 5.75],
+                    popupAnchor: [0, -5.75]
+                }),
+                'hexagon-purple': L.divIcon({
+                    className: 'custom-div-icon hexagon-icon',
+                    html: '<div style="background-color: purple;"></div>',
+                    iconSize: [20, 11.5],
+                    iconAnchor: [10, 5.75],
+                    popupAnchor: [0, -5.75]
+                }),
+                'hexagon-orange': L.divIcon({
+                    className: 'custom-div-icon hexagon-icon',
+                    html: '<div style="background-color: orange;"></div>',
+                    iconSize: [20, 11.5],
+                    iconAnchor: [10, 5.75],
+                    popupAnchor: [0, -5.75]
+                }),
+                'octagon-blue': L.divIcon({
+                    className: 'custom-div-icon octagon-icon',
+                    html: '<div style="background-color: blue;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'octagon-red': L.divIcon({
+                    className: 'custom-div-icon octagon-icon',
+                    html: '<div style="background-color: red;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'octagon-green': L.divIcon({
+                    className: 'custom-div-icon octagon-icon',
+                    html: '<div style="background-color: green;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'octagon-yellow': L.divIcon({
+                    className: 'custom-div-icon octagon-icon',
+                    html: '<div style="background-color: yellow;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'octagon-purple': L.divIcon({
+                    className: 'custom-div-icon octagon-icon',
+                    html: '<div style="background-color: purple;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'octagon-orange': L.divIcon({
+                    className: 'custom-div-icon octagon-icon',
+                    html: '<div style="background-color: orange;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'cross-blue': L.divIcon({
+                    className: 'custom-div-icon cross-icon',
+                    html: '<div style="color: blue;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'cross-red': L.divIcon({
+                    className: 'custom-div-icon cross-icon',
+                    html: '<div style="color: red;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'cross-green': L.divIcon({
+                    className: 'custom-div-icon cross-icon',
+                    html: '<div style="color: green;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'cross-yellow': L.divIcon({
+                    className: 'custom-div-icon cross-icon',
+                    html: '<div style="color: yellow;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'cross-purple': L.divIcon({
+                    className: 'custom-div-icon cross-icon',
+                    html: '<div style="color: purple;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'cross-orange': L.divIcon({
+                    className: 'custom-div-icon cross-icon',
+                    html: '<div style="color: orange;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-smile': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>😊</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-flower': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🌸</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-dog': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🐶</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-sun': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>☀️</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-butterfly': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🦋</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-rainbow': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🌈</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-star': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🌟</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-heart': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>❤️</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-thumbsup': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>👍</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-clap': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>👏</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-balloon': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🎈</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-gift': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🎁</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-tulip': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🌷</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-sunflower': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🌻</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-palm': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🌴</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-cactus': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🌵</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-cloud': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>☁️</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-moon': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🌙</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-sparkles': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>✨</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-trophy': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🏆</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-devil': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>😈</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-peach': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🍑</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-kiss': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>💋</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-wink': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>😘</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-cherry': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🍒</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-tongue': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>😛</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-eggplant': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🍆</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-hot': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🌶️</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-fire': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🔥</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-sweat': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>💦</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-wink2': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>😜</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-lips': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>👄</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-banana': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🍌</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-cocktail': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🍹</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-whisky': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🥃</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-sake': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🍶</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-party': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🎉</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-rocket': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🚀</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-heart-eyes': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>😍</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-flirt': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>😘</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-clown': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🤡</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-unicorn': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🦄</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-poop': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>💩</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-crazy': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>😜</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-drunk': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🥴</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-alien': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>👽</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-ghost': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>👻</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-robot': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🤖</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-monkey': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🙈</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-pig': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🐷</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-dinosaur': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🦖</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-turkey': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🦃</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-llama': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🦙</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-sloth': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🦥</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-otter': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🦦</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-skunk': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🦨</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-frog': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🐸</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-snake': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🐍</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-taco': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🌮</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-pizza': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🍕</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
                 })
             };
 
-            // Object to store markers
             const markers = {};
 
-            // Listen for real-time updates from Firebase for all stands
             database.ref('stands').on('value', (snapshot) => {
                 const stands = snapshot.val();
                 console.log("Received Firebase stands data:", stands);
 
-                // Clear existing markers from the map
                 Object.values(markers).forEach(marker => map.removeLayer(marker));
                 Object.keys(markers).forEach(key => delete markers[key]);
 
@@ -210,7 +989,7 @@
                     Object.entries(stands).forEach(([uid, stand]) => {
                         const location = stand.location;
                         if (location && location.status === 'active' && location.lat && location.lng && location.name) {
-                            const icon = icons[location.markerIcon] || icons['pin-blue']; // Fallback to pin-blue
+                            const icon = icons[location.markerIcon] || icons['emoji-smile'];
                             const marker = L.marker([location.lat, location.lng], { icon: icon }).addTo(map);
                             let popupContent = `<b>${location.name}</b>`;
                             if (location.bio) {
