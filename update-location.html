@@ -6,38 +6,89 @@
     <title>Update Lemonade Stand Location</title>
     <style>
         body {
+            margin: 0;
             font-family: Arial, sans-serif;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #fff;
+            color: #000;
+        }
+        h1 {
+            font-size: 2em;
+            margin: 20px 0;
+        }
+        h2 {
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+        .form-container {
+            background-color: #fff;
             padding: 20px;
+            border: 1px solid #000;
+            border-radius: 5px;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
         }
-        form {
-            margin-top: 20px;
+        input[type="email"], input[type="password"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #000;
+            border-radius: 5px;
         }
-        input, button {
-            margin: 10px;
-            padding: 5px;
+        input[type="checkbox"] {
+            margin: 10px 5px 10px 0;
+        }
+        button {
+            background-color: #000;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        button:hover {
+            background-color: #333;
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
     <h1>Update Lemonade Stand Location</h1>
-    <div id="auth">
-        <h3>Sign In</h3>
-        <input type="email" id="email" placeholder="Email" required><br>
-        <input type="password" id="password" placeholder="Password" required><br>
-        <button onclick="signIn()">Sign In</button>
+    <div class="form-container">
+        <div id="login-form">
+            <h2>Sign In</h2>
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button onclick="signIn()">Sign In</button>
+            <p id="error" class="error"></p>
+        </div>
+        <div id="update-form" class="hidden">
+            <h2>Update Location</h2>
+            <input type="number" id="latitude" placeholder="Latitude (e.g., 52.5200)" step="any">
+            <input type="number" id="longitude" placeholder="Longitude (e.g., 13.4050)" step="any">
+            <label><input type="checkbox" id="outOfService"> Out of Service</label>
+            <button onclick="updateLocation()">Update</button>
+            <p id="update-error" class="error"></p>
+        </div>
     </div>
-    <form id="locationForm" style="display: none;">
-        <label>Latitude: <input type="number" step="any" id="lat" required></label><br>
-        <label>Longitude: <input type="number" step="any" id="lng" required></label><br>
-        <button type="submit">Update Location</button>
-        <button onclick="signOut()">Sign Out</button>
-    </form>
 
+    <!-- Firebase Compat SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script>
+        // Initialize Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCLKalm4eWV5L8IHEePlBZGaFwPN0RuyVM",
             authDomain: "lemonade-bdb2f.firebaseapp.com",
@@ -49,39 +100,70 @@
             measurementId: "G-6NQ028JLGK"
         };
         firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
         const auth = firebase.auth();
+        const database = firebase.database();
+
+        // Toggle forms based on auth state
+        auth.onAuthStateChanged((user) => {
+            const loginForm = document.getElementById('login-form');
+            const updateForm = document.getElementById('update-form');
+            if (user) {
+                loginForm.classList.add('hidden');
+                updateForm.classList.remove('hidden');
+            } else {
+                loginForm.classList.remove('hidden');
+                updateForm.classList.add('hidden');
+            }
+        });
 
         function signIn() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const errorElement = document.getElementById('error');
             auth.signInWithEmailAndPassword(email, password)
-                .then(() => {
-                    document.getElementById('auth').style.display = 'none';
-                    document.getElementById('locationForm').style.display = 'block';
-                    alert('Signed in successfully!');
+                .then((userCredential) => {
+                    errorElement.textContent = 'Signed in successfully!';
+                    errorElement.style.color = 'green';
                 })
-                .catch(error => alert('Sign-in error: ' + error.message));
+                .catch((error) => {
+                    errorElement.textContent = `Error: ${error.message}`;
+                });
         }
 
-        function signOut() {
-            auth.signOut()
-                .then(() => {
-                    document.getElementById('auth').style.display = 'block';
-                    document.getElementById('locationForm').style.display = 'none';
-                    alert('Signed out successfully!');
-                })
-                .catch(error => alert('Sign-out error: ' + error.message));
+        function updateLocation() {
+            const user = auth.currentUser;
+            const errorElement = document.getElementById('update-error');
+            if (!user) {
+                errorElement.textContent = 'Please sign in first.';
+                return;
+            }
+            const lat = document.getElementById('latitude').value;
+            const lng = document.getElementById('longitude').value;
+            const outOfService = document.getElementById('outOfService').checked;
+            if (lat && lng && !outOfService) {
+                database.ref('stand/location').set({
+                    lat: parseFloat(lat),
+                    lng: parseFloat(lng),
+                    status: 'active'
+                }).then(() => {
+                    errorElement.textContent = 'Location updated!';
+                    errorElement.style.color = 'green';
+                }).catch((error) => {
+                    errorElement.textContent = `Error: ${error.message}`;
+                });
+            } else if (outOfService) {
+                database.ref('stand/location').set({
+                    status: 'out_of_service'
+                }).then(() => {
+                    errorElement.textContent = 'Stand marked as out of service!';
+                    errorElement.style.color = 'green';
+                }).catch((error) => {
+                    errorElement.textContent = `Error: ${error.message}`;
+                });
+            } else {
+                errorElement.textContent = 'Please enter valid latitude and longitude.';
+            }
         }
-
-        document.getElementById('locationForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const lat = parseFloat(document.getElementById('lat').value);
-            const lng = parseFloat(document.getElementById('lng').value);
-            database.ref('stand/location').set({ lat, lng })
-                .then(() => alert('Location updated!'))
-                .catch(error => alert('Error: ' + error.message));
-        });
     </script>
 </body>
 </html>
