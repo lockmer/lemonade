@@ -35,7 +35,7 @@
             max-width: 600px;
             margin-top: 20px;
         }
-        input, select, button {
+        input, select, button, textarea {
             margin: 10px 0;
             padding: 10px;
             font-size: 1em;
@@ -60,10 +60,22 @@
         #location-section {
             display: none;
         }
-        .error {
-            color: red;
+        .error, .success {
             font-size: 0.9em;
             margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            width: 100%;
+            max-width: 300px;
+        }
+        .error {
+            color: #fff;
+            background-color: #d32f2f;
+        }
+        .success {
+            color: #fff;
+            background-color: #388e3c;
         }
         .back-link {
             font-size: 1em;
@@ -74,6 +86,18 @@
         .back-link:hover {
             text-decoration: underline;
         }
+        #photo-preview {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        #photo-preview img {
+            max-width: 100px;
+            max-height: 100px;
+            border: 1px solid #000;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -82,7 +106,7 @@
         <input type="email" id="email" placeholder="Email">
         <input type="password" id="password" placeholder="Password">
         <button onclick="signIn()">Sign In</button>
-        <button onclick="window.location.href='/signup.html'">Sign Up</button>
+        <button onclick="goToSignUp()">Sign Up</button>
         <p class="error" id="auth-error"></p>
     </div>
     <div id="location-section">
@@ -252,10 +276,12 @@
             <input type="number" id="latitude" placeholder="Latitude (e.g., 52.5200)" step="any">
             <input type="number" id="longitude" placeholder="Longitude (e.g., 13.4050)" step="any">
             <input type="file" id="photo-upload" accept="image/*" multiple placeholder="Upload Photos (up to 3)">
+            <div id="photo-preview"></div>
             <button onclick="updateLocation()">Update Location</button>
             <button onclick="setStatus('inactive')">Remove Stand</button>
             <button onclick="signOut()">Sign Out</button>
             <p class="error" id="location-error"></p>
+            <p class="success" id="location-success"></p>
         </div>
     </div>
 
@@ -283,8 +309,8 @@
 
         let map, marker;
 
-        function initMap() {
-            map = L.map('map').setView([52.5200, 13.4050], 13);
+        function initMap(lat = 52.5200, lng = 13.4050) {
+            map = L.map('map').setView([lat, lng], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
@@ -300,16 +326,19 @@
             console.log("Map initialized successfully");
         }
 
+        function goToSignUp() {
+            window.location.href = '/signup.html';
+        }
+
         function signIn() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const authError = document.getElementById('auth-error');
 
+            authError.textContent = '';
             auth.signInWithEmailAndPassword(email, password)
                 .then(() => {
-                    document.getElementById('auth-section').style.display = 'none';
-                    document.getElementById('location-section').style.display = 'block';
-                    initMap();
+                    // Handled by onAuthStateChanged
                 })
                 .catch((error) => {
                     authError.textContent = error.message;
@@ -321,6 +350,8 @@
                 .then(() => {
                     document.getElementById('location-section').style.display = 'none';
                     document.getElementById('auth-section').style.display = 'block';
+                    document.getElementById('location-error').textContent = '';
+                    document.getElementById('location-success').textContent = '';
                     if (map) {
                         map.remove();
                         map = null;
@@ -332,10 +363,50 @@
                 });
         }
 
+        function loadStandData(user) {
+            database.ref(`stands/${user.uid}/location`).once('value')
+                .then((snapshot) => {
+                    const data = snapshot.val();
+                    if (data && data.status === 'active') {
+                        document.getElementById('name').value = data.name || '';
+                        document.getElementById('bio').value = data.bio || '';
+                        document.getElementById('markerIcon').value = data.markerIcon || 'pin-blue';
+                        document.getElementById('latitude').value = data.lat ? data.lat.toFixed(6) : '';
+                        document.getElementById('longitude').value = data.lng ? data.lng.toFixed(6) : '';
+                        if (data.lat && data.lng) {
+                            initMap(data.lat, data.lng);
+                            marker = L.marker([data.lat, data.lng]).addTo(map);
+                        } else {
+                            initMap();
+                        }
+                        if (data.photos && data.photos.length > 0) {
+                            const photoPreview = document.getElementById('photo-preview');
+                            photoPreview.innerHTML = '';
+                            data.photos.forEach(url => {
+                                const img = document.createElement('img');
+                                img.src = url;
+                                photoPreview.appendChild(img);
+                            });
+                        }
+                    } else {
+                        initMap();
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error loading stand data:", error);
+                    initMap();
+                });
+        }
+
         function updateLocation() {
             const user = auth.currentUser;
+            const locationError = document.getElementById('location-error');
+            const locationSuccess = document.getElementById('location-success');
+            locationError.textContent = '';
+            locationSuccess.textContent = '';
+
             if (!user) {
-                document.getElementById('location-error').textContent = 'Please sign in first.';
+                locationError.textContent = 'Please sign in first.';
                 return;
             }
 
@@ -347,7 +418,7 @@
             const files = document.getElementById('photo-upload').files;
 
             if (!name || (!marker && (isNaN(latitude) || isNaN(longitude))) || !markerIcon) {
-                document.getElementById('location-error').textContent = 'Please provide a name, select a location (via map or coordinates), and choose an icon.';
+                locationError.textContent = 'Please provide a name, select a location (via map or coordinates), and choose an icon.';
                 return;
             }
 
@@ -364,48 +435,68 @@
 
             Promise.all(uploadPromises)
                 .then(() => {
-                    database.ref(`stands/${user.uid}/location`).set({
-                        lat: lat,
-                        lng: lng,
-                        name: name,
-                        bio: bio,
-                        photos: photoUrls,
-                        markerIcon: markerIcon,
-                        status: 'active'
-                    })
-                    .then(() => {
+                    // Fetch existing photos to preserve them if no new uploads
+                    return database.ref(`stands/${user.uid}/location`).once('value')
+                        .then((snapshot) => {
+                            const existingData = snapshot.val();
+                            const existingPhotos = (existingData && existingData.photos) || [];
+                            const finalPhotos = files.length > 0 ? photoUrls : existingPhotos;
+
+                            return database.ref(`stands/${user.uid}/location`).set({
+                                lat: lat,
+                                lng: lng,
+                                name: name,
+                                bio: bio,
+                                photos: finalPhotos,
+                                markerIcon: markerIcon,
+                                status: 'active'
+                            });
+                        });
+                })
+                .then(() => {
+                    locationSuccess.textContent = 'Stand updated successfully!';
+                    setTimeout(() => {
                         window.location.href = '/';
-                    })
-                    .catch((error) => {
-                        document.getElementById('location-error').textContent = error.message;
-                    });
+                    }, 2000);
                 })
                 .catch((error) => {
-                    document.getElementById('location-error').textContent = error.message;
+                    locationError.textContent = error.message;
                 });
         }
 
         function setStatus(status) {
             const user = auth.currentUser;
+            const locationError = document.getElementById('location-error');
+            const locationSuccess = document.getElementById('location-success');
+            locationError.textContent = '';
+            locationSuccess.textContent = '';
+
             if (user) {
                 database.ref(`stands/${user.uid}/location`).update({ status: status })
                     .then(() => {
-                        window.location.href = '/';
+                        locationSuccess.textContent = 'Stand removed successfully!';
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 2000);
                     })
                     .catch((error) => {
-                        document.getElementById('location-error').textContent = error.message;
+                        locationError.textContent = error.message;
                     });
             }
         }
 
-        // Initialize Firebase and check auth state
         auth.onAuthStateChanged((user) => {
+            const authError = document.getElementById('auth-error');
+            const locationError = document.getElementById('location-error');
+            const locationSuccess = document.getElementById('location-success');
+            authError.textContent = '';
+            locationError.textContent = '';
+            locationSuccess.textContent = '';
+
             if (user) {
                 document.getElementById('auth-section').style.display = 'none';
                 document.getElementById('location-section').style.display = 'block';
-                if (!map) {
-                    initMap();
-                }
+                loadStandData(user);
             } else {
                 document.getElementById('auth-section').style.display = 'block';
                 document.getElementById('location-section').style.display = 'none';
@@ -417,6 +508,7 @@
             }
         }, (error) => {
             console.error("Auth state change error:", error);
+            document.getElementById('auth-error').textContent = 'Authentication error. Please try again.';
             document.getElementById('auth-section').style.display = 'block';
             document.getElementById('location-section').style.display = 'none';
         });
