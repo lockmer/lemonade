@@ -31,7 +31,7 @@
             width: 90%;
             max-width: 400px;
         }
-        input[type="email"], input[type="password"], input[type="number"] {
+        input[type="email"], input[type="password"], input[type="number"], input[type="text"] {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
@@ -76,6 +76,7 @@
         </div>
         <div id="update-form" class="hidden">
             <h2>Update Location</h2>
+            <input type="text" id="plusCode" placeholder="Plus Code (e.g., 8FWCX3G6+5J)">
             <input type="number" id="latitude" placeholder="Latitude (e.g., 52.5200)" step="any">
             <input type="number" id="longitude" placeholder="Longitude (e.g., 13.4050)" step="any">
             <label><input type="checkbox" id="outOfService"> Out of Service</label>
@@ -89,6 +90,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <!-- Open Location Code library -->
+    <script src="https://unpkg.com/openlocationcode@1.0.4/openlocationcode.js"></script>
     <script>
         // Initialize Firebase
         const firebaseConfig = {
@@ -139,21 +142,12 @@
                 errorElement.textContent = 'Please sign in first.';
                 return;
             }
+            const plusCode = document.getElementById('plusCode').value.trim();
             const lat = document.getElementById('latitude').value;
             const lng = document.getElementById('longitude').value;
             const outOfService = document.getElementById('outOfService').checked;
-            if (lat && lng && !outOfService) {
-                database.ref('stand/location').set({
-                    lat: parseFloat(lat),
-                    lng: parseFloat(lng),
-                    status: 'active'
-                }).then(() => {
-                    errorElement.textContent = 'Location updated!';
-                    errorElement.style.color = 'green';
-                }).catch((error) => {
-                    errorElement.textContent = `Error: ${error.message}`;
-                });
-            } else if (outOfService) {
+
+            if (outOfService) {
                 database.ref('stand/location').set({
                     status: 'out_of_service'
                 }).then(() => {
@@ -162,9 +156,41 @@
                 }).catch((error) => {
                     errorElement.textContent = `Error: ${error.message}`;
                 });
-            } else {
-                errorElement.textContent = 'Please enter valid latitude and longitude.';
+                return;
             }
+
+            let finalLat, finalLng;
+            if (plusCode) {
+                try {
+                    const decoded = OpenLocationCode.decode(plusCode);
+                    finalLat = decoded.latitudeCenter;
+                    finalLng = decoded.longitudeCenter;
+                } catch (error) {
+                    errorElement.textContent = 'Invalid Plus Code. Please try again.';
+                    return;
+                }
+            } else if (lat && lng) {
+                finalLat = parseFloat(lat);
+                finalLng = parseFloat(lng);
+                if (isNaN(finalLat) || isNaN(finalLng)) {
+                    errorElement.textContent = 'Please enter valid latitude and longitude.';
+                    return;
+                }
+            } else {
+                errorElement.textContent = 'Please enter a Plus Code or valid latitude and longitude.';
+                return;
+            }
+
+            database.ref('stand/location').set({
+                lat: finalLat,
+                lng: finalLng,
+                status: 'active'
+            }).then(() => {
+                errorElement.textContent = 'Location updated!';
+                errorElement.style.color = 'green';
+            }).catch((error) => {
+                errorElement.textContent = `Error: ${error.message}`;
+            });
         }
 
         function signOut() {
