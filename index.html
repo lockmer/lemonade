@@ -89,9 +89,10 @@
                 const stands = snapshot.val();
                 console.log("Received Firebase stands data:", stands);
 
-                // Clear existing markers
+                // Clear existing markers from the map
                 Object.values(markers).forEach(marker => map.removeLayer(marker));
-                markers = {};
+                // Clear the markers object
+                Object.keys(markers).forEach(key => delete markers[key]);
 
                 if (stands) {
                     Object.entries(stands).forEach(([uid, stand]) => {
