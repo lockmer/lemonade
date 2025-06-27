@@ -81,31 +81,27 @@
                 attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
-            // Initialize marker
-            let marker = null;
+            // Object to store markers
+            const markers = {};
 
-            // Listen for real-time location updates from Firebase
-            database.ref('stand/location').on('value', (snapshot) => {
-                const data = snapshot.val();
-                console.log("Received Firebase data:", data);
-                if (data && data.status === 'active' && data.lat && data.lng) {
-                    if (marker) {
-                        marker.setLatLng([data.lat, data.lng]);
-                    } else {
-                        marker = L.marker([data.lat, data.lng]).addTo(map);
-                    }
-                    map.panTo([data.lat, data.lng]);
-                    marker.bindPopup("<b>Lemonade Stand</b><br>Updated location!").openPopup();
-                } else if (data && data.status === 'out_of_service') {
-                    if (marker) {
-                        map.removeLayer(marker);
-                        marker = null;
-                    }
-                } else {
-                    if (marker) {
-                        map.removeLayer(marker);
-                        marker = null;
-                    }
+            // Listen for real-time updates from Firebase for all stands
+            database.ref('stands').on('value', (snapshot) => {
+                const stands = snapshot.val();
+                console.log("Received Firebase stands data:", stands);
+
+                // Clear existing markers
+                Object.values(markers).forEach(marker => map.removeLayer(marker));
+                markers = {};
+
+                if (stands) {
+                    Object.entries(stands).forEach(([uid, stand]) => {
+                        const location = stand.location;
+                        if (location && location.status === 'active' && location.lat && location.lng && location.name) {
+                            const marker = L.marker([location.lat, location.lng]).addTo(map);
+                            marker.bindPopup(`<b>${location.name}</b><br>Updated location!`).openPopup();
+                            markers[uid] = marker;
+                        }
+                    });
                 }
             }, (error) => {
                 console.error("Firebase listener error:", error);
