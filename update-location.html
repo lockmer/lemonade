@@ -31,7 +31,7 @@
             width: 90%;
             max-width: 400px;
         }
-        input[type="email"], input[type="password"], input[type="number"] {
+        input[type="email"], input[type="password"], input[type="number"], input[type="text"] {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
@@ -67,15 +67,27 @@
 <body>
     <h1>Update Lemonade Stand Location</h1>
     <div class="form-container">
-        <div id="login-form">
-            <h2>Sign In</h2>
-            <input type="email" id="email" placeholder="Email" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <button onclick="signIn()">Sign In</button>
-            <p id="error" class="error"></p>
+        <div id="auth-form">
+            <div id="login-form">
+                <h2>Sign In</h2>
+                <input type="email" id="login-email" placeholder="Email" required>
+                <input type="password" id="login-password" placeholder="Password" required>
+                <button onclick="signIn()">Sign In</button>
+                <button onclick="showSignUp()">Sign Up</button>
+                <p id="login-error" class="error"></p>
+            </div>
+            <div id="signup-form" class="hidden">
+                <h2>Sign Up</h2>
+                <input type="text" id="stand-name" placeholder="Stand Name (e.g., Joe's Lemonade)" required>
+                <input type="email" id="signup-email" placeholder="Email" required>
+                <input type="password" id="signup-password" placeholder="Password" required>
+                <button onclick="signUp()">Create Account</button>
+                <button onclick="showSignIn()">Back to Sign In</button>
+                <p id="signup-error" class="error"></p>
+            </div>
         </div>
         <div id="update-form" class="hidden">
-            <h2>Update Location</h2>
+            <h2>Update Your Stand</h2>
             <input type="number" id="latitude" placeholder="Latitude (e.g., 52.5200)" step="any">
             <input type="number" id="longitude" placeholder="Longitude (e.g., 13.4050)" step="any">
             <label><input type="checkbox" id="outOfService"> Out of Service</label>
@@ -107,25 +119,63 @@
 
         // Toggle forms based on auth state
         auth.onAuthStateChanged((user) => {
-            const loginForm = document.getElementById('login-form');
+            const authForm = document.getElementById('auth-form');
             const updateForm = document.getElementById('update-form');
             if (user) {
-                loginForm.classList.add('hidden');
+                authForm.classList.add('hidden');
                 updateForm.classList.remove('hidden');
             } else {
-                loginForm.classList.remove('hidden');
+                authForm.classList.remove('hidden');
                 updateForm.classList.add('hidden');
+                showSignIn();
             }
         });
 
+        function showSignUp() {
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('signup-form').classList.remove('hidden');
+        }
+
+        function showSignIn() {
+            document.getElementById('signup-form').classList.add('hidden');
+            document.getElementById('login-form').classList.remove('hidden');
+        }
+
         function signIn() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const errorElement = document.getElementById('error');
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const errorElement = document.getElementById('login-error');
             auth.signInWithEmailAndPassword(email, password)
                 .then((userCredential) => {
                     errorElement.textContent = 'Signed in successfully!';
                     errorElement.style.color = 'green';
+                })
+                .catch((error) => {
+                    errorElement.textContent = `Error: ${error.message}`;
+                });
+        }
+
+        function signUp() {
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const standName = document.getElementById('stand-name').value.trim();
+            const errorElement = document.getElementById('signup-error');
+            if (!standName) {
+                errorElement.textContent = 'Please enter a stand name.';
+                return;
+            }
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    return database.ref(`stands/${user.uid}/location`).set({
+                        name: standName,
+                        status: 'out_of_service'
+                    });
+                })
+                .then(() => {
+                    errorElement.textContent = 'Account created! Please sign in.';
+                    errorElement.style.color = 'green';
+                    showSignIn();
                 })
                 .catch((error) => {
                     errorElement.textContent = `Error: ${error.message}`;
@@ -142,35 +192,41 @@
             const lat = document.getElementById('latitude').value;
             const lng = document.getElementById('longitude').value;
             const outOfService = document.getElementById('outOfService').checked;
-            if (lat && lng && !outOfService) {
-                const finalLat = parseFloat(lat);
-                const finalLng = parseFloat(lng);
-                if (isNaN(finalLat) || isNaN(finalLng)) {
+            database.ref(`stands/${user.uid}/location`).once('value').then((snapshot) => {
+                const data = snapshot.val();
+                const standName = data ? data.name : 'My Stand';
+                if (lat && lng && !outOfService) {
+                    const finalLat = parseFloat(lat);
+                    const finalLng = parseFloat(lng);
+                    if (isNaN(finalLat) || isNaN(finalLng)) {
+                        errorElement.textContent = 'Please enter valid latitude and longitude.';
+                        return;
+                    }
+                    database.ref(`stands/${user.uid}/location`).set({
+                        name: standName,
+                        lat: finalLat,
+                        lng: finalLng,
+                        status: 'active'
+                    }).then(() => {
+                        errorElement.textContent = 'Location updated!';
+                        errorElement.style.color = 'green';
+                    }).catch((error) => {
+                        errorElement.textContent = `Error: ${error.message}`;
+                    });
+                } else if (outOfService) {
+                    database.ref(`stands/${user.uid}/location`).set({
+                        name: standName,
+                        status: 'out_of_service'
+                    }).then(() => {
+                        errorElement.textContent = 'Stand marked as out of service!';
+                        errorElement.style.color = 'green';
+                    }).catch((error) => {
+                        errorElement.textContent = `Error: ${error.message}`;
+                    });
+                } else {
                     errorElement.textContent = 'Please enter valid latitude and longitude.';
-                    return;
                 }
-                database.ref('stand/location').set({
-                    lat: finalLat,
-                    lng: finalLng,
-                    status: 'active'
-                }).then(() => {
-                    errorElement.textContent = 'Location updated!';
-                    errorElement.style.color = 'green';
-                }).catch((error) => {
-                    errorElement.textContent = `Error: ${error.message}`;
-                });
-            } else if (outOfService) {
-                database.ref('stand/location').set({
-                    status: 'out_of_service'
-                }).then(() => {
-                    errorElement.textContent = 'Stand marked as out of service!';
-                    errorElement.style.color = 'green';
-                }).catch((error) => {
-                    errorElement.textContent = `Error: ${error.message}`;
-                });
-            } else {
-                errorElement.textContent = 'Please enter valid latitude and longitude.';
-            }
+            });
         }
 
         function signOut() {
