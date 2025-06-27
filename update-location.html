@@ -174,11 +174,15 @@
         }
 
         function signOut() {
-            auth.signOut().then(() => {
-                window.location.href = '/index.html';
-            }).catch((error) => {
-                document.getElementById('update-error').textContent = `Error: ${error.message}`;
-            });
+            auth.signOut()
+                .then(() => {
+                    console.log('Sign out successful, redirecting to /');
+                    window.location.replace('/');
+                })
+                .catch((error) => {
+                    console.error('Sign out error:', error);
+                    document.getElementById('update-error').textContent = `Sign out error: ${error.message}`;
+                });
         }
     </script>
 </body>
