@@ -76,6 +76,7 @@
     </div>
     <div id="customize-container" class="container">
         <input type="text" id="stand-name" placeholder="Stand Name" required>
+        <input type="email" id="stand-email" placeholder="Contact Email" required>
         <input type="number" id="latitude" placeholder="Latitude" step="any">
         <input type="number" id="longitude" placeholder="Longitude" step="any">
         <select id="markerIcon">
@@ -162,6 +163,8 @@
             </optgroup>
             <!-- Emoji Markers -->
             <optgroup label="Friendly Emojis">
+                <option value="emoji-lemon">Lemon 🍋</option>
+                <option value="emoji-lime">Lime 🍋‍🟩</option>
                 <option value="emoji-smile">Smile 😊</option>
                 <option value="emoji-flower">Flower 🌸</option>
                 <option value="emoji-dog">Dog 🐶</option>
@@ -180,8 +183,6 @@
                 <option value="emoji-cactus">Cactus 🌵</option>
                 <option value="emoji-cloud">Cloud ☁️</option>
                 <option value="emoji-moon">Moon 🌙</option>
-                <option value="emoji-sparkles">Sparkles ✨</option>
-                <option value="emoji-trophy">Trophy 🏆</option>
             </optgroup>
             <optgroup label="Risqué Emojis">
                 <option value="emoji-devil">Devil 😈</option>
@@ -285,8 +286,9 @@
                     const user = userCredential.user;
                     database.ref('stands/' + user.uid + '/location').set({
                         name: name,
+                        email: email,
                         status: 'active',
-                        markerIcon: 'emoji-smile',
+                        markerIcon: 'emoji-lemon',
                         bio: '',
                         photos: []
                     }).then(() => {
@@ -322,9 +324,10 @@
                         const data = snapshot.val();
                         if (data) {
                             document.getElementById('stand-name').value = data.name || '';
+                            document.getElementById('stand-email').value = data.email || '';
                             document.getElementById('latitude').value = data.lat || '';
                             document.getElementById('longitude').value = data.lng || '';
-                            document.getElementById('markerIcon').value = data.markerIcon || 'emoji-smile';
+                            document.getElementById('markerIcon').value = data.markerIcon || 'emoji-lemon';
                             document.getElementById('bio').value = data.bio || '';
                             document.getElementById('outOfService').checked = data.status === 'out_of_service';
                         } else {
@@ -346,13 +349,14 @@
             const latInput = document.getElementById('latitude').value;
             const lngInput = document.getElementById('longitude').value;
             const name = document.getElementById('stand-name').value;
+            const email = document.getElementById('stand-email').value;
             const markerIcon = document.getElementById('markerIcon').value;
             const bio = document.getElementById('bio').value;
             const outOfService = document.getElementById('outOfService').checked;
             const photos = document.getElementById('photos').files;
 
-            if (!name) {
-                showMessage('customize', 'Stand name is required', 'error');
+            if (!name || !email) {
+                showMessage('customize', 'Stand name and email are required', 'error');
                 return;
             }
             if ((latInput && !lngInput) || (!latInput && lngInput)) {
@@ -374,6 +378,7 @@
 
             const updates = {
                 name: name,
+                email: email,
                 status: outOfService ? 'out_of_service' : 'active',
                 markerIcon: markerIcon,
                 bio: bio,
@@ -472,9 +477,10 @@
             } else {
                 showLogin();
                 document.getElementById('stand-name').value = '';
+                document.getElementById('stand-email').value = '';
                 document.getElementById('latitude').value = '';
                 document.getElementById('longitude').value = '';
-                document.getElementById('markerIcon').value = 'emoji-smile';
+                document.getElementById('markerIcon').value = 'emoji-lemon';
                 document.getElementById('bio').value = '';
                 document.getElementById('outOfService').checked = false;
             }
