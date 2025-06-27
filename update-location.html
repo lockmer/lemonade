@@ -57,13 +57,19 @@
         #auth-section, #location-section {
             display: none;
         }
-        #photo-upload {
-            display: none;
-        }
         .error {
             color: red;
             font-size: 0.9em;
             margin-top: 10px;
+        }
+        .back-link {
+            font-size: 1em;
+            color: #000;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+        .back-link:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -73,6 +79,7 @@
         <input type="email" id="email" placeholder="Email">
         <input type="password" id="password" placeholder="Password">
         <button onclick="signIn()">Sign In</button>
+        <button onclick="window.location.href='/signup.html'">Sign Up</button>
         <p class="error" id="auth-error"></p>
     </div>
     <div id="location-section">
@@ -182,7 +189,7 @@
                 <option value="emoji-rocket">Rocket 🚀</option>
                 <option value="emoji-heart-eyes">Heart Eyes 😍</option>
                 <option value="emoji-flirt">Flirt 😘</option>
-                <option value="emoji-cl Roschach">Clown 🤡</option>
+                <option value="emoji-clown">Clown 🤡</option>
                 <option value="emoji-unicorn">Unicorn 🦄</option>
                 <option value="emoji-poop">Poop 💩</option>
                 <option value="emoji-crazy">Crazy 😜</option>
@@ -239,7 +246,9 @@
                 <option value="emoji-poultry">Poultry 🍗</option>
                 <option value="emoji-hotdog">Hot Dog 🌭</option>
             </select>
-            <input type="file" id="photo-upload" accept="image/*" multiple>
+            <input type="number" id="latitude" placeholder="Latitude (e.g., 52.5200)" step="any">
+            <input type="number" id="longitude" placeholder="Longitude (e.g., 13.4050)" step="any">
+            <input type="file" id="photo-upload" accept="image/*" multiple placeholder="Upload Photos (up to 3)">
             <button onclick="updateLocation()">Update Location</button>
             <button onclick="setStatus('inactive')">Remove Stand</button>
             <p class="error" id="location-error"></p>
@@ -281,6 +290,8 @@
                     map.removeLayer(marker);
                 }
                 marker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(map);
+                document.getElementById('latitude').value = e.latlng.lat.toFixed(6);
+                document.getElementById('longitude').value = e.latlng.lng.toFixed(6);
             });
         }
 
@@ -310,15 +321,20 @@
             const name = document.getElementById('name').value;
             const bio = document.getElementById('bio').value;
             const markerIcon = document.getElementById('markerIcon').value;
+            const latitude = parseFloat(document.getElementById('latitude').value);
+            const longitude = parseFloat(document.getElementById('longitude').value);
             const files = document.getElementById('photo-upload').files;
 
-            if (!name || !marker || !markerIcon) {
-                document.getElementById('location-error').textContent = 'Please provide a name, select a location, and choose an icon.';
+            if (!name || (!marker && (isNaN(latitude) || isNaN(longitude))) || !markerIcon) {
+                document.getElementById('location-error').textContent = 'Please provide a name, select a location (via map or coordinates), and choose an icon.';
                 return;
             }
 
+            const lat = marker ? marker.getLatLng().lat : latitude;
+            const lng = marker ? marker.getLatLng().lng : longitude;
+
             const photoUrls = [];
-            const uploadPromises = Array.from(files).map(file => {
+            const uploadPromises = Array.from(files).slice(0, 3).map(file => {
                 const storageRef = storage.ref(`stands/${user.uid}/${file.name}`);
                 return storageRef.put(file)
                     .then(() => storageRef.getDownloadURL())
@@ -328,8 +344,8 @@
             Promise.all(uploadPromises)
                 .then(() => {
                     database.ref(`stands/${user.uid}/location`).set({
-                        lat: marker.getLatLng().lat,
-                        lng: marker.getLatLng().lng,
+                        lat: lat,
+                        lng: lng,
                         name: name,
                         bio: bio,
                         photos: photoUrls,
