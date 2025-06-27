@@ -54,7 +54,10 @@
         button:hover {
             background-color: #333;
         }
-        #auth-section, #location-section {
+        #auth-section {
+            display: block;
+        }
+        #location-section {
             display: none;
         }
         .error {
@@ -381,10 +384,17 @@
             if (user) {
                 document.getElementById('auth-section').style.display = 'none';
                 document.getElementById('location-section').style.display = 'block';
-                initMap();
+                if (!map) { // Only initialize map if not already initialized
+                    initMap();
+                }
             } else {
                 document.getElementById('auth-section').style.display = 'block';
                 document.getElementById('location-section').style.display = 'none';
+                if (map) { // Remove map if user logs out
+                    map.remove();
+                    map = null;
+                    marker = null;
+                }
             }
         });
     </script>
