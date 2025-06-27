@@ -37,6 +37,10 @@
             border-radius: 5px;
             box-sizing: border-box;
         }
+        select {
+            max-height: 200px;
+            overflow-y: auto;
+        }
         textarea {
             resize: vertical;
             min-height: 100px;
@@ -75,21 +79,154 @@
         <input type="number" id="latitude" placeholder="Latitude" step="any">
         <input type="number" id="longitude" placeholder="Longitude" step="any">
         <select id="markerIcon">
-            <option value="pin-blue">Pin Blue</option>
-            <option value="pin-red">Pin Red</option>
-            <option value="pin-green">Pin Green</option>
-            <option value="pin-yellow">Pin Yellow</option>
-            <option value="pin-purple">Pin Purple</option>
-            <option value="circle-blue">Circle Blue</option>
-            <option value="circle-red">Circle Red</option>
-            <option value="circle-green">Circle Green</option>
-            <option value="circle-yellow">Circle Yellow</option>
-            <option value="circle-purple">Circle Purple</option>
-            <option value="square-blue">Square Blue</option>
-            <option value="square-red">Square Red</option>
-            <option value="square-green">Square Green</option>
-            <option value="square-yellow">Square Yellow</option>
-            <option value="square-purple">Square Purple</option>
+            <!-- Shape Markers -->
+            <optgroup label="Pin Markers">
+                <option value="pin-blue">Pin Blue</option>
+                <option value="pin-red">Pin Red</option>
+                <option value="pin-green">Pin Green</option>
+                <option value="pin-yellow">Pin Yellow</option>
+                <option value="pin-purple">Pin Purple</option>
+                <option value="pin-orange">Pin Orange</option>
+            </optgroup>
+            <optgroup label="Circle Markers">
+                <option value="circle-blue">Circle Blue</option>
+                <option value="circle-red">Circle Red</option>
+                <option value="circle-green">Circle Green</option>
+                <option value="circle-yellow">Circle Yellow</option>
+                <option value="circle-purple">Circle Purple</option>
+                <option value="circle-orange">Circle Orange</option>
+            </optgroup>
+            <optgroup label="Square Markers">
+                <option value="square-blue">Square Blue</option>
+                <option value="square-red">Square Red</option>
+                <option value="square-green">Square Green</option>
+                <option value="square-yellow">Square Yellow</option>
+                <option value="square-purple">Square Purple</option>
+                <option value="square-orange">Square Orange</option>
+            </optgroup>
+            <optgroup label="Star Markers">
+                <option value="star-blue">Star Blue</option>
+                <option value="star-red">Star Red</option>
+                <option value="star-green">Star Green</option>
+                <option value="star-yellow">Star Yellow</option>
+                <option value="star-purple">Star Purple</option>
+                <option value="star-orange">Star Orange</option>
+            </optgroup>
+            <optgroup label="Heart Markers">
+                <option value="heart-blue">Heart Blue</option>
+                <option value="heart-red">Heart Red</option>
+                <option value="heart-green">Heart Green</option>
+                <option value="heart-yellow">Heart Yellow</option>
+                <option value="heart-purple">Heart Purple</option>
+                <option value="heart-orange">Heart Orange</option>
+            </optgroup>
+            <optgroup label="Diamond Markers">
+                <option value="diamond-blue">Diamond Blue</option>
+                <option value="diamond-red">Diamond Red</option>
+                <option value="diamond-green">Diamond Green</option>
+                <option value="diamond-yellow">Diamond Yellow</option>
+                <option value="diamond-purple">Diamond Purple</option>
+                <option value="diamond-orange">Diamond Orange</option>
+            </optgroup>
+            <optgroup label="Triangle Markers">
+                <option value="triangle-blue">Triangle Blue</option>
+                <option value="triangle-red">Triangle Red</option>
+                <option value="triangle-green">Triangle Green</option>
+                <option value="triangle-yellow">Triangle Yellow</option>
+                <option value="triangle-purple">Triangle Purple</option>
+                <option value="triangle-orange">Triangle Orange</option>
+            </optgroup>
+            <optgroup label="Hexagon Markers">
+                <option value="hexagon-blue">Hexagon Blue</option>
+                <option value="hexagon-red">Hexagon Red</option>
+                <option value="hexagon-green">Hexagon Green</option>
+                <option value="hexagon-yellow">Hexagon Yellow</option>
+                <option value="hexagon-purple">Hexagon Purple</option>
+                <option value="hexagon-orange">Hexagon Orange</option>
+            </optgroup>
+            <optgroup label="Octagon Markers">
+                <option value="octagon-blue">Octagon Blue</option>
+                <option value="octagon-red">Octagon Red</option>
+                <option value="octagon-green">Octagon Green</option>
+                <option value="octagon-yellow">Octagon Yellow</option>
+                <option value="octagon-purple">Octagon Purple</option>
+                <option value="octagon-orange">Octagon Orange</option>
+            </optgroup>
+            <optgroup label="Cross Markers">
+                <option value="cross-blue">Cross Blue</option>
+                <option value="cross-red">Cross Red</option>
+                <option value="cross-green">Cross Green</option>
+                <option value="cross-yellow">Cross Yellow</option>
+                <option value="cross-purple">Cross Purple</option>
+                <option value="cross-orange">Cross Orange</option>
+            </optgroup>
+            <!-- Emoji Markers -->
+            <optgroup label="Friendly Emojis">
+                <option value="emoji-smile">Smile 😊</option>
+                <option value="emoji-flower">Flower 🌸</option>
+                <option value="emoji-dog">Dog 🐶</option>
+                <option value="emoji-sun">Sun ☀️</option>
+                <option value="emoji-butterfly">Butterfly 🦋</option>
+                <option value="emoji-rainbow">Rainbow 🌈</option>
+                <option value="emoji-star">Star 🌟</option>
+                <option value="emoji-heart">Heart ❤️</option>
+                <option value="emoji-thumbsup">Thumbs Up 👍</option>
+                <option value="emoji-clap">Clap 👏</option>
+                <option value="emoji-balloon">Balloon 🎈</option>
+                <option value="emoji-gift">Gift 🎁</option>
+                <option value="emoji-tulip">Tulip 🌷</option>
+                <option value="emoji-sunflower">Sunflower 🌻</option>
+                <option value="emoji-palm">Palm Tree 🌴</option>
+                <option value="emoji-cactus">Cactus 🌵</option>
+                <option value="emoji-cloud">Cloud ☁️</option>
+                <option value="emoji-moon">Moon 🌙</option>
+                <option value="emoji-sparkles">Sparkles ✨</option>
+                <option value="emoji-trophy">Trophy 🏆</option>
+            </optgroup>
+            <optgroup label="Risqué Emojis">
+                <option value="emoji-devil">Devil 😈</option>
+                <option value="emoji-peach">Peach 🍑</option>
+                <option value="emoji-kiss">Kiss 💋</option>
+                <option value="emoji-wink">Wink 😘</option>
+                <option value="emoji-cherry">Cherry 🍒</option>
+                <option value="emoji-tongue">Tongue 😛</option>
+                <option value="emoji-eggplant">Eggplant 🍆</option>
+                <option value="emoji-hot">Hot 🌶️</option>
+                <option value="emoji-fire">Fire 🔥</option>
+                <option value="emoji-sweat">Sweat 💦</option>
+                <option value="emoji-wink2">Wink 😜</option>
+                <option value="emoji-lips">Lips 👄</option>
+                <option value="emoji-banana">Banana 🍌</option>
+                <option value="emoji-cocktail">Cocktail 🍹</option>
+                <option value="emoji-whisky">Whisky 🥃</option>
+                <option value="emoji-sake">Sake 🍶</option>
+                <option value="emoji-party">Party 🎉</option>
+                <option value="emoji-rocket">Rocket 🚀</option>
+                <option value="emoji-heart-eyes">Heart Eyes 😍</option>
+                <option value="emoji-flirt">Flirt 😘</option>
+            </optgroup>
+            <optgroup label="Funny Emojis">
+                <option value="emoji-clown">Clown 🤡</option>
+                <option value="emoji-unicorn">Unicorn 🦄</option>
+                <option value="emoji-poop">Poop 💩</option>
+                <option value="emoji-crazy">Crazy 😜</option>
+                <option value="emoji-drunk">Drunk 🥴</option>
+                <option value="emoji-alien">Alien 👽</option>
+                <option value="emoji-ghost">Ghost 👻</option>
+                <option value="emoji-robot">Robot 🤖</option>
+                <option value="emoji-monkey">Monkey 🙈</option>
+                <option value="emoji-pig">Pig 🐷</option>
+                <option value="emoji-dinosaur">Dinosaur 🦖</option>
+                <option value="emoji-turkey">Turkey 🦃</option>
+                <option value="emoji-llama">Llama 🦙</option>
+                <option value="emoji-sloth">Sloth 🦥</option>
+                <option value="emoji-otter">Otter 🦦</option>
+                <option value="emoji-skunk">Skunk 🦨</option>
+                <option value="emoji-frog">Frog 🐸</option>
+                <option value="emoji-snake">Snake 🐍</option>
+                <option value="emoji-taco">Taco 🌮</option>
+                <option value="emoji-pizza">Pizza 🍕</option>
+            </optgroup>
         </select>
         <textarea id="bio" placeholder="Short bio (max 200 characters)" maxlength="200"></textarea>
         <input type="file" id="photos" accept="image/*" multiple>
@@ -149,7 +286,7 @@
                     database.ref('stands/' + user.uid + '/location').set({
                         name: name,
                         status: 'active',
-                        markerIcon: 'pin-blue',
+                        markerIcon: 'emoji-smile',
                         bio: '',
                         photos: []
                     }).then(() => {
@@ -187,7 +324,7 @@
                             document.getElementById('stand-name').value = data.name || '';
                             document.getElementById('latitude').value = data.lat || '';
                             document.getElementById('longitude').value = data.lng || '';
-                            document.getElementById('markerIcon').value = data.markerIcon || 'pin-blue';
+                            document.getElementById('markerIcon').value = data.markerIcon || 'emoji-smile';
                             document.getElementById('bio').value = data.bio || '';
                             document.getElementById('outOfService').checked = data.status === 'out_of_service';
                         } else {
@@ -314,7 +451,7 @@
             const statusMessage = document.getElementById(container + '-status-message');
             statusMessage.textContent = message;
             statusMessage.className = 'status-message ' + type;
-            setTimeout(() => clearMessage(container), 5000); // Clear after 5 seconds
+            setTimeout(() => clearMessage(container), 5000);
         }
 
         function clearMessage(container) {
@@ -337,7 +474,7 @@
                 document.getElementById('stand-name').value = '';
                 document.getElementById('latitude').value = '';
                 document.getElementById('longitude').value = '';
-                document.getElementById('markerIcon').value = 'pin-blue';
+                document.getElementById('markerIcon').value = 'emoji-smile';
                 document.getElementById('bio').value = '';
                 document.getElementById('outOfService').checked = false;
             }
