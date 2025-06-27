@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Lemonade Stand</title>
+    <title>Update Lemonade Stand Location</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <style>
         body {
             margin: 0;
@@ -14,155 +15,133 @@
             background-color: #fff;
             color: #000;
         }
-        h1 {
-            font-size: 2.5em;
+        h2 {
+            font-size: 1.8em;
             margin: 20px 0;
         }
-        .container {
-            display: none;
+        #map {
+            height: 50vh;
+            width: 90%;
+            max-width: 800px;
+            border: 2px solid #000;
+            border-radius: 10px;
+            z-index: 1;
+        }
+        .form-container {
+            display: flex;
             flex-direction: column;
             align-items: center;
             width: 90%;
-            max-width: 400px;
+            max-width: 600px;
+            margin-top: 20px;
         }
-        .container.active {
-            display: flex;
-        }
-        input, select, textarea, button {
-            width: 100%;
-            padding: 10px;
+        input, select, button {
             margin: 10px 0;
+            padding: 10px;
             font-size: 1em;
+            width: 100%;
+            max-width: 300px;
             border: 1px solid #000;
             border-radius: 5px;
-            box-sizing: border-box;
-        }
-        select {
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        textarea {
-            resize: vertical;
-            min-height: 100px;
+            background-color: #fff;
+            color: #000;
         }
         button {
+            cursor: pointer;
             background-color: #000;
             color: #fff;
-            border: none;
-            cursor: pointer;
         }
         button:hover {
             background-color: #333;
         }
-        .status-message {
-            margin-top: 10px;
-            font-size: 1em;
-            text-align: center;
+        #auth-section, #location-section {
+            display: none;
         }
-        .success { color: green; }
-        .error { color: red; }
+        #photo-upload {
+            display: none;
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
-    <h1 id="page-title">Lemonade Stand Login</h1>
-    <div id="login-container" class="container active">
-        <input type="email" id="email" placeholder="Email" required>
-        <input type="password" id="password" placeholder="Password" required>
-        <input type="text" id="name" placeholder="Stand Name (for sign-up)" required>
-        <button onclick="signUp()">Sign Up</button>
+    <div id="auth-section">
+        <h2>Sign In</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password">
         <button onclick="signIn()">Sign In</button>
-        <button onclick="signOut()">Back to Map</button>
-        <p id="login-status-message" class="status-message"></p>
+        <p class="error" id="auth-error"></p>
     </div>
-    <div id="customize-container" class="container">
-        <input type="text" id="stand-name" placeholder="Stand Name" required>
-        <input type="email" id="stand-email" placeholder="Contact Email" required>
-        <input type="number" id="latitude" placeholder="Latitude" step="any">
-        <input type="number" id="longitude" placeholder="Longitude" step="any">
-        <select id="markerIcon">
-            <!-- Shape Markers -->
-            <optgroup label="Pin Markers">
-                <option value="pin-blue">Pin Blue</option>
-                <option value="pin-red">Pin Red</option>
-                <option value="pin-green">Pin Green</option>
-                <option value="pin-yellow">Pin Yellow</option>
-                <option value="pin-purple">Pin Purple</option>
-                <option value="pin-orange">Pin Orange</option>
-            </optgroup>
-            <optgroup label="Circle Markers">
-                <option value="circle-blue">Circle Blue</option>
-                <option value="circle-red">Circle Red</option>
-                <option value="circle-green">Circle Green</option>
-                <option value="circle-yellow">Circle Yellow</option>
-                <option value="circle-purple">Circle Purple</option>
-                <option value="circle-orange">Circle Orange</option>
-            </optgroup>
-            <optgroup label="Square Markers">
-                <option value="square-blue">Square Blue</option>
-                <option value="square-red">Square Red</option>
-                <option value="square-green">Square Green</option>
-                <option value="square-yellow">Square Yellow</option>
-                <option value="square-purple">Square Purple</option>
-                <option value="square-orange">Square Orange</option>
-            </optgroup>
-            <optgroup label="Star Markers">
-                <option value="star-blue">Star Blue</option>
-                <option value="star-red">Star Red</option>
-                <option value="star-green">Star Green</option>
-                <option value="star-yellow">Star Yellow</option>
-                <option value="star-purple">Star Purple</option>
-                <option value="star-orange">Star Orange</option>
-            </optgroup>
-            <optgroup label="Heart Markers">
-                <option value="heart-blue">Heart Blue</option>
-                <option value="heart-red">Heart Red</option>
-                <option value="heart-green">Heart Green</option>
-                <option value="heart-yellow">Heart Yellow</option>
-                <option value="heart-purple">Heart Purple</option>
-                <option value="heart-orange">Heart Orange</option>
-            </optgroup>
-            <optgroup label="Diamond Markers">
-                <option value="diamond-blue">Diamond Blue</option>
-                <option value="diamond-red">Diamond Red</option>
-                <option value="diamond-green">Diamond Green</option>
-                <option value="diamond-yellow">Diamond Yellow</option>
-                <option value="diamond-purple">Diamond Purple</option>
-                <option value="diamond-orange">Diamond Orange</option>
-            </optgroup>
-            <optgroup label="Triangle Markers">
-                <option value="triangle-blue">Triangle Blue</option>
-                <option value="triangle-red">Triangle Red</option>
-                <option value="triangle-green">Triangle Green</option>
-                <option value="triangle-yellow">Triangle Yellow</option>
-                <option value="triangle-purple">Triangle Purple</option>
-                <option value="triangle-orange">Triangle Orange</option>
-            </optgroup>
-            <optgroup label="Hexagon Markers">
-                <option value="hexagon-blue">Hexagon Blue</option>
-                <option value="hexagon-red">Hexagon Red</option>
-                <option value="hexagon-green">Hexagon Green</option>
-                <option value="hexagon-yellow">Hexagon Yellow</option>
-                <option value="hexagon-purple">Hexagon Purple</option>
-                <option value="hexagon-orange">Hexagon Orange</option>
-            </optgroup>
-            <optgroup label="Octagon Markers">
-                <option value="octagon-blue">Octagon Blue</option>
-                <option value="octagon-red">Octagon Red</option>
-                <option value="octagon-green">Octagon Green</option>
-                <option value="octagon-yellow">Octagon Yellow</option>
-                <option value="octagon-purple">Octagon Purple</option>
-                <option value="octagon-orange">Octagon Orange</option>
-            </optgroup>
-            <optgroup label="Cross Markers">
-                <option value="cross-blue">Cross Blue</option>
-                <option value="cross-red">Cross Red</option>
-                <option value="cross-green">Cross Green</option>
-                <option value="cross-yellow">Cross Yellow</option>
-                <option value="cross-purple">Cross Purple</option>
-                <option value="cross-orange">Cross Orange</option>
-            </optgroup>
-            <!-- Emoji Markers -->
-            <optgroup label="Friendly Emojis">
+    <div id="location-section">
+        <h2>Update Your Stand</h2>
+        <div id="map"></div>
+        <div class="form-container">
+            <input type="text" id="name" placeholder="Stand Name">
+            <textarea id="bio" placeholder="Bio (optional)"></textarea>
+            <select id="markerIcon">
+                <option value="pin-blue">Blue Pin</option>
+                <option value="pin-red">Red Pin</option>
+                <option value="pin-green">Green Pin</option>
+                <option value="pin-yellow">Yellow Pin</option>
+                <option value="pin-purple">Purple Pin</option>
+                <option value="pin-orange">Orange Pin</option>
+                <option value="circle-blue">Blue Circle</option>
+                <option value="circle-red">Red Circle</option>
+                <option value="circle-green">Green Circle</option>
+                <option value="circle-yellow">Yellow Circle</option>
+                <option value="circle-purple">Purple Circle</option>
+                <option value="circle-orange">Orange Circle</option>
+                <option value="square-blue">Blue Square</option>
+                <option value="square-red">Red Square</option>
+                <option value="square-green">Green Square</option>
+                <option value="square-yellow">Yellow Square</option>
+                <option value="square-purple">Purple Square</option>
+                <option value="square-orange">Orange Square</option>
+                <option value="star-blue">Blue Star</option>
+                <option value="star-red">Red Star</option>
+                <option value="star-green">Green Star</option>
+                <option value="star-yellow">Yellow Star</option>
+                <option value="star-purple">Purple Star</option>
+                <option value="star-orange">Orange Star</option>
+                <option value="heart-blue">Blue Heart</option>
+                <option value="heart-red">Red Heart</option>
+                <option value="heart-green">Green Heart</option>
+                <option value="heart-yellow">Yellow Heart</option>
+                <option value="heart-purple">Purple Heart</option>
+                <option value="heart-orange">Orange Heart</option>
+                <option value="diamond-blue">Blue Diamond</option>
+                <option value="diamond-red">Red Diamond</option>
+                <option value="diamond-green">Green Diamond</option>
+                <option value="diamond-yellow">Yellow Diamond</option>
+                <option value="diamond-purple">Purple Diamond</option>
+                <option value="diamond-orange">Orange Diamond</option>
+                <option value="triangle-blue">Blue Triangle</option>
+                <option value="triangle-red">Red Triangle</option>
+                <option value="triangle-green">Green Triangle</option>
+                <option value="triangle-yellow">Yellow Triangle</option>
+                <option value="triangle-purple">Purple Triangle</option>
+                <option value="triangle-orange">Orange Triangle</option>
+                <option value="hexagon-blue">Blue Hexagon</option>
+                <option value="hexagon-red">Red Hexagon</option>
+                <option value="hexagon-green">Green Hexagon</option>
+                <option value="hexagon-yellow">Yellow Hexagon</option>
+                <option value="hexagon-purple">Purple Hexagon</option>
+                <option value="hexagon-orange">Orange Hexagon</option>
+                <option value="octagon-blue">Blue Octagon</option>
+                <option value="octagon-red">Red Octagon</option>
+                <option value="octagon-green">Green Octagon</option>
+                <option value="octagon-yellow">Yellow Octagon</option>
+                <option value="octagon-purple">Purple Octagon</option>
+                <option value="octagon-orange">Orange Octagon</option>
+                <option value="cross-blue">Blue Cross</option>
+                <option value="cross-red">Red Cross</option>
+                <option value="cross-green">Green Cross</option>
+                <option value="cross-yellow">Yellow Cross</option>
+                <option value="cross-purple">Purple Cross</option>
+                <option value="cross-orange">Orange Cross</option>
                 <option value="emoji-lemon">Lemon 🍋</option>
                 <option value="emoji-lime">Lime 🍋‍🟩</option>
                 <option value="emoji-smile">Smile 😊</option>
@@ -179,12 +158,10 @@
                 <option value="emoji-gift">Gift 🎁</option>
                 <option value="emoji-tulip">Tulip 🌷</option>
                 <option value="emoji-sunflower">Sunflower 🌻</option>
-                <option value="emoji-palm">Palm Tree 🌴</option>
+                <option value="emoji-palm">Palm 🌴</option>
                 <option value="emoji-cactus">Cactus 🌵</option>
                 <option value="emoji-cloud">Cloud ☁️</option>
                 <option value="emoji-moon">Moon 🌙</option>
-            </optgroup>
-            <optgroup label="Risqué Emojis">
                 <option value="emoji-devil">Devil 😈</option>
                 <option value="emoji-peach">Peach 🍑</option>
                 <option value="emoji-kiss">Kiss 💋</option>
@@ -192,10 +169,10 @@
                 <option value="emoji-cherry">Cherry 🍒</option>
                 <option value="emoji-tongue">Tongue 😛</option>
                 <option value="emoji-eggplant">Eggplant 🍆</option>
-                <option value="emoji-hot">Hot 🌶️</option>
+                <option value="emoji-hot">Hot Pepper 🌶️</option>
                 <option value="emoji-fire">Fire 🔥</option>
                 <option value="emoji-sweat">Sweat 💦</option>
-                <option value="emoji-wink2">Wink 😜</option>
+                <option value="emoji-wink2">Wink 2 😜</option>
                 <option value="emoji-lips">Lips 👄</option>
                 <option value="emoji-banana">Banana 🍌</option>
                 <option value="emoji-cocktail">Cocktail 🍹</option>
@@ -205,9 +182,7 @@
                 <option value="emoji-rocket">Rocket 🚀</option>
                 <option value="emoji-heart-eyes">Heart Eyes 😍</option>
                 <option value="emoji-flirt">Flirt 😘</option>
-            </optgroup>
-            <optgroup label="Funny Emojis">
-                <option value="emoji-clown">Clown 🤡</option>
+                <option value="emoji-cl Roschach">Clown 🤡</option>
                 <option value="emoji-unicorn">Unicorn 🦄</option>
                 <option value="emoji-poop">Poop 💩</option>
                 <option value="emoji-crazy">Crazy 😜</option>
@@ -227,21 +202,55 @@
                 <option value="emoji-snake">Snake 🐍</option>
                 <option value="emoji-taco">Taco 🌮</option>
                 <option value="emoji-pizza">Pizza 🍕</option>
-            </optgroup>
-        </select>
-        <textarea id="bio" placeholder="Short bio (max 200 characters)" maxlength="200"></textarea>
-        <input type="file" id="photos" accept="image/*" multiple>
-        <label><input type="checkbox" id="outOfService"> Out of Service</label>
-        <button onclick="updateLocation()">Update Stand</button>
-        <button onclick="signOut()">Sign Out</button>
-        <p id="customize-status-message" class="status-message"></p>
+                <option value="emoji-burger">Burger 🍔</option>
+                <option value="emoji-fries">Fries 🍟</option>
+                <option value="emoji-icecream">Ice Cream 🍦</option>
+                <option value="emoji-donut">Donut 🍩</option>
+                <option value="emoji-cake">Cake 🎂</option>
+                <option value="emoji-cookie">Cookie 🍪</option>
+                <option value="emoji-chocolate">Chocolate 🍫</option>
+                <option value="emoji-coffee">Coffee ☕</option>
+                <option value="emoji-tea">Tea 🍵</option>
+                <option value="emoji-sushi">Sushi 🍣</option>
+                <option value="emoji-ramen">Ramen 🍜</option>
+                <option value="emoji-pear">Pear 🍐</option>
+                <option value="emoji-apple">Apple 🍎</option>
+                <option value="emoji-orange">Orange 🍊</option>
+                <option value="emoji-strawberry">Strawberry 🍓</option>
+                <option value="emoji-watermelon">Watermelon 🍉</option>
+                <option value="emoji-grapes">Grapes 🍇</option>
+                <option value="emoji-mango">Mango 🥭</option>
+                <option value="emoji-pineapple">Pineapple 🍍</option>
+                <option value="emoji-kiwi">Kiwi 🥝</option>
+                <option value="emoji-avocado">Avocado 🥑</option>
+                <option value="emoji-broccoli">Broccoli 🥦</option>
+                <option value="emoji-carrot">Carrot 🥕</option>
+                <option value="emoji-corn">Corn 🌽</option>
+                <option value="emoji-mushroom">Mushroom 🍄</option>
+                <option value="emoji-cheese">Cheese 🧀</option>
+                <option value="emoji-bread">Bread 🍞</option>
+                <option value="emoji-pretzel">Pretzel 🥨</option>
+                <option value="emoji-bagel">Bagel 🥯</option>
+                <option value="emoji-pancakes">Pancakes 🥞</option>
+                <option value="emoji-waffle">Waffle 🧇</option>
+                <option value="emoji-bacon">Bacon 🥓</option>
+                <option value="emoji-egg">Egg 🥚</option>
+                <option value="emoji-meat">Meat 🍖</option>
+                <option value="emoji-poultry">Poultry 🍗</option>
+                <option value="emoji-hotdog">Hot Dog 🌭</option>
+            </select>
+            <input type="file" id="photo-upload" accept="image/*" multiple>
+            <button onclick="updateLocation()">Update Location</button>
+            <button onclick="setStatus('inactive')">Remove Stand</button>
+            <p class="error" id="location-error"></p>
+        </div>
     </div>
 
-    <!-- Firebase Compat SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyCLKalm4eWV5L8IHEePlBZGaFwPN0RuyVM",
@@ -253,236 +262,113 @@
             appId: "1:557489157751:web:d76a36ec0e942249a67872",
             measurementId: "G-6NQ028JLGK"
         };
+
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const database = firebase.database();
         const storage = firebase.storage();
-        console.log("Firebase initialized successfully");
 
-        function showLogin() {
-            document.getElementById('login-container').classList.add('active');
-            document.getElementById('customize-container').classList.remove('active');
-            document.getElementById('page-title').textContent = 'Lemonade Stand Login';
-            clearMessages();
-        }
+        let map, marker;
 
-        function showCustomize() {
-            document.getElementById('login-container').classList.remove('active');
-            document.getElementById('customize-container').classList.add('active');
-            document.getElementById('page-title').textContent = 'Customize Your Stand';
-            clearMessages();
-        }
+        function initMap() {
+            map = L.map('map').setView([52.5200, 13.4050], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
 
-        function signUp() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const name = document.getElementById('name').value;
-            if (!email || !password || !name) {
-                showMessage('login', 'Please fill in all fields', 'error');
-                return;
-            }
-            auth.createUserWithEmailAndPassword(email, password)
-                .then(userCredential => {
-                    const user = userCredential.user;
-                    database.ref('stands/' + user.uid + '/location').set({
-                        name: name,
-                        email: email,
-                        status: 'active',
-                        markerIcon: 'emoji-lemon',
-                        bio: '',
-                        photos: []
-                    }).then(() => {
-                        showMessage('login', 'Sign-up successful! Loading customization...', 'success');
-                        setTimeout(showCustomize, 1000);
-                    }).catch(error => {
-                        showMessage('login', 'Database error during sign-up: ' + error.message, 'error');
-                    });
-                })
-                .catch(error => {
-                    showMessage('login', 'Sign-up error: ' + error.message, 'error');
-                });
+            map.on('click', (e) => {
+                if (marker) {
+                    map.removeLayer(marker);
+                }
+                marker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(map);
+            });
         }
 
         function signIn() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const authError = document.getElementById('auth-error');
+
             auth.signInWithEmailAndPassword(email, password)
                 .then(() => {
-                    showMessage('login', 'Signed in successfully! Loading customization...', 'success');
-                    setTimeout(showCustomize, 1000);
+                    document.getElementById('auth-section').style.display = 'none';
+                    document.getElementById('location-section').style.display = 'block';
+                    initMap();
                 })
-                .catch(error => {
-                    showMessage('login', 'Sign-in error: ' + error.message, 'error');
+                .catch((error) => {
+                    authError.textContent = error.message;
                 });
-        }
-
-        function loadUserData() {
-            const user = auth.currentUser;
-            if (user) {
-                database.ref('stands/' + user.uid + '/location').once('value')
-                    .then(snapshot => {
-                        const data = snapshot.val();
-                        if (data) {
-                            document.getElementById('stand-name').value = data.name || '';
-                            document.getElementById('stand-email').value = data.email || '';
-                            document.getElementById('latitude').value = data.lat || '';
-                            document.getElementById('longitude').value = data.lng || '';
-                            document.getElementById('markerIcon').value = data.markerIcon || 'emoji-lemon';
-                            document.getElementById('bio').value = data.bio || '';
-                            document.getElementById('outOfService').checked = data.status === 'out_of_service';
-                        } else {
-                            showMessage('customize', 'No stand data found, please update your stand', 'error');
-                        }
-                    }).catch(error => {
-                        showMessage('customize', 'Error loading data: ' + error.message, 'error');
-                    });
-            }
         }
 
         function updateLocation() {
             const user = auth.currentUser;
             if (!user) {
-                showMessage('login', 'Please sign in first', 'error');
-                showLogin();
+                document.getElementById('location-error').textContent = 'Please sign in first.';
                 return;
             }
-            const latInput = document.getElementById('latitude').value;
-            const lngInput = document.getElementById('longitude').value;
-            const name = document.getElementById('stand-name').value;
-            const email = document.getElementById('stand-email').value;
-            const markerIcon = document.getElementById('markerIcon').value;
+
+            const name = document.getElementById('name').value;
             const bio = document.getElementById('bio').value;
-            const outOfService = document.getElementById('outOfService').checked;
-            const photos = document.getElementById('photos').files;
+            const markerIcon = document.getElementById('markerIcon').value;
+            const files = document.getElementById('photo-upload').files;
 
-            if (!name || !email) {
-                showMessage('customize', 'Stand name and email are required', 'error');
-                return;
-            }
-            if ((latInput && !lngInput) || (!latInput && lngInput)) {
-                showMessage('customize', 'Both latitude and longitude are required if one is provided', 'error');
+            if (!name || !marker || !markerIcon) {
+                document.getElementById('location-error').textContent = 'Please provide a name, select a location, and choose an icon.';
                 return;
             }
 
-            const lat = latInput ? parseFloat(latInput) : null;
-            const lng = lngInput ? parseFloat(lngInput) : null;
+            const photoUrls = [];
+            const uploadPromises = Array.from(files).map(file => {
+                const storageRef = storage.ref(`stands/${user.uid}/${file.name}`);
+                return storageRef.put(file)
+                    .then(() => storageRef.getDownloadURL())
+                    .then(url => photoUrls.push(url));
+            });
 
-            if (latInput && (isNaN(lat) || lat < -90 || lat > 90)) {
-                showMessage('customize', 'Invalid latitude (must be between -90 and 90)', 'error');
-                return;
-            }
-            if (lngInput && (isNaN(lng) || lng < -180 || lng > 180)) {
-                showMessage('customize', 'Invalid longitude (must be between -180 and 180)', 'error');
-                return;
-            }
-
-            const updates = {
-                name: name,
-                email: email,
-                status: outOfService ? 'out_of_service' : 'active',
-                markerIcon: markerIcon,
-                bio: bio,
-                photos: []
-            };
-            if (lat !== null && lng !== null) {
-                updates.lat = lat;
-                updates.lng = lng;
-            }
-
-            console.log('Attempting to update stand with:', updates);
-            database.ref('stands/' + user.uid + '/location').set(updates)
+            Promise.all(uploadPromises)
                 .then(() => {
-                    showMessage('customize', 'Stand updated successfully!', 'success');
-                    console.log('Stand update successful');
+                    database.ref(`stands/${user.uid}/location`).set({
+                        lat: marker.getLatLng().lat,
+                        lng: marker.getLatLng().lng,
+                        name: name,
+                        bio: bio,
+                        photos: photoUrls,
+                        markerIcon: markerIcon,
+                        status: 'active'
+                    })
+                    .then(() => {
+                        window.location.href = '/';
+                    })
+                    .catch((error) => {
+                        document.getElementById('location-error').textContent = error.message;
+                    });
                 })
-                .catch(error => {
-                    showMessage('customize', 'Update error: ' + error.message, 'error');
-                    console.error('Stand update failed:', error);
-                });
-
-            if (photos.length > 0) {
-                if (photos.length > 3) {
-                    showMessage('customize', 'Maximum 3 photos allowed', 'error');
-                    return;
-                }
-                const uploadPromises = [];
-                const photoUrls = [];
-                Array.from(photos).forEach((file, index) => {
-                    const storageRef = storage.ref(`stands/${user.uid}/photo${index + 1}`);
-                    uploadPromises.push(
-                        storageRef.put(file).then(() => {
-                            return storageRef.getDownloadURL().then(url => {
-                                photoUrls[index] = url;
-                                console.log(`Photo ${index + 1} uploaded: ${url}`);
-                            }).catch(error => {
-                                console.error(`Failed to get download URL for photo ${index + 1}:`, error);
-                            });
-                        }).catch(error => {
-                            console.error(`Failed to upload photo ${index + 1}:`, error);
-                        })
-                    );
-                });
-                Promise.all(uploadPromises).then(() => {
-                    if (photoUrls.length > 0) {
-                        database.ref('stands/' + user.uid + '/location').update({
-                            photos: photoUrls.filter(url => url)
-                        }).then(() => {
-                            showMessage('customize', 'Photos updated successfully!', 'success');
-                            console.log('Photos update successful');
-                        }).catch(error => {
-                            showMessage('customize', 'Photo update error: ' + error.message, 'error');
-                            console.error('Photos update failed:', error);
-                        });
-                    }
-                }).catch(error => {
-                    showMessage('customize', 'Photo upload error: ' + error.message, 'error');
-                    console.error('Photo uploads failed:', error);
-                });
-            }
-        }
-
-        function signOut() {
-            auth.signOut()
-                .then(() => {
-                    showMessage('login', 'Sign out successful, redirecting to map...', 'success');
-                    setTimeout(() => window.location.href = '/', 1000);
-                })
-                .catch(error => {
-                    showMessage('login', 'Sign out error: ' + error.message, 'error');
+                .catch((error) => {
+                    document.getElementById('location-error').textContent = error.message;
                 });
         }
 
-        function showMessage(container, message, type) {
-            const statusMessage = document.getElementById(container + '-status-message');
-            statusMessage.textContent = message;
-            statusMessage.className = 'status-message ' + type;
-            setTimeout(() => clearMessage(container), 5000);
-        }
-
-        function clearMessage(container) {
-            const statusMessage = document.getElementById(container + '-status-message');
-            statusMessage.textContent = '';
-            statusMessage.className = 'status-message';
-        }
-
-        function clearMessages() {
-            clearMessage('login');
-            clearMessage('customize');
-        }
-
-        auth.onAuthStateChanged(user => {
+        function setStatus(status) {
+            const user = auth.currentUser;
             if (user) {
-                showCustomize();
-                loadUserData();
+                database.ref(`stands/${user.uid}/location`).update({ status: status })
+                    .then(() => {
+                        window.location.href = '/';
+                    })
+                    .catch((error) => {
+                        document.getElementById('location-error').textContent = error.message;
+                    });
+            }
+        }
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('auth-section').style.display = 'none';
+                document.getElementById('location-section').style.display = 'block';
+                initMap();
             } else {
-                showLogin();
-                document.getElementById('stand-name').value = '';
-                document.getElementById('stand-email').value = '';
-                document.getElementById('latitude').value = '';
-                document.getElementById('longitude').value = '';
-                document.getElementById('markerIcon').value = 'emoji-lemon';
-                document.getElementById('bio').value = '';
-                document.getElementById('outOfService').checked = false;
+                document.getElementById('auth-section').style.display = 'block';
+                document.getElementById('location-section').style.display = 'none';
             }
         });
     </script>
