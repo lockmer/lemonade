@@ -51,6 +51,20 @@
             max-width: 100px;
             margin: 5px;
         }
+        .send-message-btn {
+            background-color: #fbc02d;
+            color: #333;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            display: block;
+            text-align: center;
+        }
+        .send-message-btn:hover {
+            background-color: #e6b800;
+        }
         .custom-div-icon {
             display: flex;
             justify-content: center;
@@ -115,8 +129,8 @@
 
     <!-- Firebase Compat SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <!-- Leaflet.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <script>
         const firebaseConfig = {
@@ -131,6 +145,7 @@
         };
         try {
             firebase.initializeApp(firebaseConfig);
+            const auth = firebase.auth();
             const database = firebase.database();
             console.log("Firebase initialized successfully");
 
@@ -554,6 +569,20 @@
                     iconAnchor: [10, 10],
                     popupAnchor: [0, -10]
                 }),
+                'emoji-lemon': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🍋</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
+                'emoji-lime': L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<span>🍋‍🟩</span>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10]
+                }),
                 'emoji-smile': L.divIcon({
                     className: 'custom-div-icon',
                     html: '<span>😊</span>',
@@ -676,20 +705,6 @@
                 'emoji-moon': L.divIcon({
                     className: 'custom-div-icon',
                     html: '<span>🌙</span>',
-                    iconSize: [20, 20],
-                    iconAnchor: [10, 10],
-                    popupAnchor: [0, -10]
-                }),
-                'emoji-sparkles': L.divIcon({
-                    className: 'custom-div-icon',
-                    html: '<span>✨</span>',
-                    iconSize: [20, 20],
-                    iconAnchor: [10, 10],
-                    popupAnchor: [0, -10]
-                }),
-                'emoji-trophy': L.divIcon({
-                    className: 'custom-div-icon',
-                    html: '<span>🏆</span>',
                     iconSize: [20, 20],
                     iconAnchor: [10, 10],
                     popupAnchor: [0, -10]
@@ -989,7 +1004,7 @@
                     Object.entries(stands).forEach(([uid, stand]) => {
                         const location = stand.location;
                         if (location && location.status === 'active' && location.lat && location.lng && location.name) {
-                            const icon = icons[location.markerIcon] || icons['emoji-smile'];
+                            const icon = icons[location.markerIcon] || icons['emoji-lemon'];
                             const marker = L.marker([location.lat, location.lng], { icon: icon }).addTo(map);
                             let popupContent = `<b>${location.name}</b>`;
                             if (location.bio) {
@@ -1002,6 +1017,7 @@
                                 });
                                 popupContent += '</div>';
                             }
+                            popupContent += `<br><a href="/send-message.html?uid=${uid}" class="send-message-btn">Send Message</a>`;
                             marker.bindPopup(popupContent).openPopup();
                             markers[uid] = marker;
                             console.log(`Added marker for ${location.name}: ${location.markerIcon}`);
