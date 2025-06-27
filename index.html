@@ -12,12 +12,11 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #fff9c4;
-            color: #333;
+            background-color: #fff;
+            color: #000;
         }
         h1 {
             font-size: 2.5em;
-            color: #f57f17;
             margin: 20px 0;
         }
         p {
@@ -30,8 +29,8 @@
             height: 70vh;
             width: 90%;
             max-width: 800px;
-            border: 2px solid #f57f17;
-            border-radius: 10px;
+            border: 1px solid #000;
+            border-radius: 5px;
         }
         .transparent-link {
             color: transparent;
@@ -45,7 +44,7 @@
             margin-top: 10px;
         }
         .transparent-link:hover {
-            background-color: rgba(245, 127, 23, 0.2); /* Slight highlight on hover for you to locate */
+            background-color: rgba(0, 0, 0, 0.2); /* Black hover effect */
         }
     </style>
 </head>
@@ -81,20 +80,31 @@
                 attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
-            // Add a marker for the lemonade stand
-            const marker = L.marker([52.5200, 13.4050]).addTo(map);
-            marker.bindPopup("<b>Lemonade Stand</b><br>Here we are!").openPopup();
+            // Initialize marker
+            let marker = null;
 
             // Listen for real-time location updates from Firebase
             database.ref('stand/location').on('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data && data.lat && data.lng) {
-                    console.log("Received Firebase data:", data);
-                    marker.setLatLng([data.lat, data.lng]);
+                console.log("Received Firebase data:", data);
+                if (data && data.status === 'active' && data.lat && data.lng) {
+                    if (marker) {
+                        marker.setLatLng([data.lat, data.lng]);
+                    } else {
+                        marker = L.marker([data.lat, data.lng]).addTo(map);
+                    }
                     map.panTo([data.lat, data.lng]);
                     marker.bindPopup("<b>Lemonade Stand</b><br>Updated location!").openPopup();
+                } else if (data && data.status === 'out_of_service') {
+                    if (marker) {
+                        map.removeLayer(marker);
+                        marker = null;
+                    }
                 } else {
-                    console.log("No valid Firebase data at stand/location");
+                    if (marker) {
+                        map.removeLayer(marker);
+                        marker = null;
+                    }
                 }
             }, (error) => {
                 console.error("Firebase listener error:", error);
