@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Lemonade Stand Location</title>
+    <title>Update Lemonade Stand</title>
     <style>
         body {
             margin: 0;
@@ -19,11 +19,14 @@
             margin: 20px 0;
         }
         .container {
-            display: flex;
+            display: none;
             flex-direction: column;
             align-items: center;
             width: 90%;
             max-width: 400px;
+        }
+        .container.active {
+            display: flex;
         }
         input, select, textarea, button {
             width: 100%;
@@ -32,6 +35,7 @@
             font-size: 1em;
             border: 1px solid #000;
             border-radius: 5px;
+            box-sizing: border-box;
         }
         textarea {
             resize: vertical;
@@ -49,19 +53,25 @@
         #status-message {
             margin-top: 10px;
             font-size: 1em;
+            text-align: center;
         }
         .success { color: green; }
         .error { color: red; }
     </style>
 </head>
 <body>
-    <h1>Update Your Stand</h1>
-    <div class="container">
+    <h1 id="page-title">Lemonade Stand Login</h1>
+    <div id="login-container" class="container active">
         <input type="email" id="email" placeholder="Email" required>
         <input type="password" id="password" placeholder="Password" required>
-        <input type="text" id="name" placeholder="Stand Name" required>
+        <input type="text" id="name" placeholder="Stand Name (for sign-up)" required>
         <button onclick="signUp()">Sign Up</button>
         <button onclick="signIn()">Sign In</button>
+        <button onclick="signOut()">Back to Map</button>
+        <p id="status-message"></p>
+    </div>
+    <div id="customize-container" class="container">
+        <input type="text" id="stand-name" placeholder="Stand Name" required>
         <input type="number" id="latitude" placeholder="Latitude" step="any">
         <input type="number" id="longitude" placeholder="Longitude" step="any">
         <select id="markerIcon">
@@ -72,7 +82,7 @@
         <textarea id="bio" placeholder="Short bio (max 200 characters)" maxlength="200"></textarea>
         <input type="file" id="photos" accept="image/*" multiple>
         <label><input type="checkbox" id="outOfService"> Out of Service</label>
-        <button onclick="updateLocation()">Update</button>
+        <button onclick="updateLocation()">Update Stand</button>
         <button onclick="signOut()">Sign Out</button>
         <p id="status-message"></p>
     </div>
@@ -99,6 +109,20 @@
         const storage = firebase.storage();
         console.log("Firebase initialized successfully");
 
+        function showLogin() {
+            document.getElementById('login-container').classList.add('active');
+            document.getElementById('customize-container').classList.remove('active');
+            document.getElementById('page-title').textContent = 'Lemonade Stand Login';
+            clearMessage();
+        }
+
+        function showCustomize() {
+            document.getElementById('login-container').classList.remove('active');
+            document.getElementById('customize-container').classList.add('active');
+            document.getElementById('page-title').textContent = 'Customize Your Stand';
+            clearMessage();
+        }
+
         function signUp() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -112,9 +136,13 @@
                     const user = userCredential.user;
                     database.ref('stands/' + user.uid + '/location').set({
                         name: name,
-                        status: 'out_of_service'
+                        status: 'out_of_service',
+                        markerIcon: 'lemon',
+                        bio: '',
+                        photos: []
                     });
-                    showMessage('Sign-up successful! Please sign in.', 'success');
+                    showMessage('Sign-up successful! Loading customization...', 'success');
+                    setTimeout(showCustomize, 1000);
                 })
                 .catch(error => {
                     showMessage('Sign-up error: ' + error.message, 'error');
@@ -126,8 +154,8 @@
             const password = document.getElementById('password').value;
             auth.signInWithEmailAndPassword(email, password)
                 .then(() => {
-                    showMessage('Signed in successfully!', 'success');
-                    loadUserData();
+                    showMessage('Signed in successfully! Loading customization...', 'success');
+                    setTimeout(showCustomize, 1000);
                 })
                 .catch(error => {
                     showMessage('Sign-in error: ' + error.message, 'error');
@@ -141,7 +169,7 @@
                     .then(snapshot => {
                         const data = snapshot.val();
                         if (data) {
-                            document.getElementById('name').value = data.name || '';
+                            document.getElementById('stand-name').value = data.name || '';
                             document.getElementById('latitude').value = data.lat || '';
                             document.getElementById('longitude').value = data.lng || '';
                             document.getElementById('markerIcon').value = data.markerIcon || 'lemon';
@@ -156,11 +184,12 @@
             const user = auth.currentUser;
             if (!user) {
                 showMessage('Please sign in first', 'error');
+                showLogin();
                 return;
             }
             const lat = parseFloat(document.getElementById('latitude').value);
             const lng = parseFloat(document.getElementById('longitude').value);
-            const name = document.getElementById('name').value;
+            const name = document.getElementById('stand-name').value;
             const markerIcon = document.getElementById('markerIcon').value;
             const bio = document.getElementById('bio').value;
             const outOfService = document.getElementById('outOfService').checked;
@@ -182,7 +211,6 @@
                 updates.lng = lng;
             }
 
-            // Handle photo uploads
             const uploadPromises = [];
             const photoUrls = [];
             if (photos.length > 0) {
@@ -206,7 +234,7 @@
                 }
                 database.ref('stands/' + user.uid + '/location').set(updates)
                     .then(() => {
-                        showMessage('Location updated!', 'success');
+                        showMessage('Stand updated!', 'success');
                     })
                     .catch(error => {
                         showMessage('Update error: ' + error.message, 'error');
@@ -219,7 +247,7 @@
         function signOut() {
             auth.signOut()
                 .then(() => {
-                    showMessage('Sign out successful, redirecting to /', 'success');
+                    showMessage('Sign out successful, redirecting to map...', 'success');
                     setTimeout(() => window.location.href = '/', 1000);
                 })
                 .catch(error => {
@@ -233,11 +261,19 @@
             statusMessage.className = type;
         }
 
+        function clearMessage() {
+            const statusMessage = document.getElementById('status-message');
+            statusMessage.textContent = '';
+            statusMessage.className = '';
+        }
+
         auth.onAuthStateChanged(user => {
             if (user) {
+                showCustomize();
                 loadUserData();
             } else {
-                document.getElementById('name').value = '';
+                showLogin();
+                document.getElementById('stand-name').value = '';
                 document.getElementById('latitude').value = '';
                 document.getElementById('longitude').value = '';
                 document.getElementById('markerIcon').value = 'lemon';
