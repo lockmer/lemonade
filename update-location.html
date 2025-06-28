@@ -62,12 +62,17 @@
         }
         .error, .success {
             font-size: 0.9em;
-            margin-top: 10px;
+            margin: 10px 0;
             padding: 10px;
             border-radius: 5px;
             text-align: center;
             width: 100%;
             max-width: 300px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .error.show, .success.show {
+            opacity: 1;
         }
         .error {
             color: #fff;
@@ -272,6 +277,27 @@
                 <option value="emoji-meat">Meat 🍖</option>
                 <option value="emoji-poultry">Poultry 🍗</option>
                 <option value="emoji-hotdog">Hot Dog 🌭</option>
+                <option value="emoji-croissant">Croissant 🥐</option>
+                <option value="emoji-dango">Dango 🍡</option>
+                <option value="emoji-lion">Lion 🦁</option>
+                <option value="emoji-guitar">Guitar 🎸</option>
+                <option value="emoji-bicycle">Bicycle 🚴‍♀️</option>
+                <option value="emoji-paintbrush">Paintbrush 🎨</option>
+                <option value="emoji-lollipop">Lollipop 🍭</option>
+                <option value="emoji-cupcake">Cupcake 🧁</option>
+                <option value="emoji-popcorn">Popcorn 🍿</option>
+                <option value="emoji-juice">Juice 🧃</option>
+                <option value="emoji-sparkles">Sparkles ✨</option>
+                <option value="emoji-sunglasses">Sunglasses 😎</option>
+                <option value="emoji-hat">Party Hat 🎉</option>
+                <option value="emoji-umbrella">Beach Umbrella ☂️</option>
+                <option value="emoji-paw">Paw Prints 🐾</option>
+                <option value="emoji-dragon">Dragon 🐉</option>
+                <option value="emoji-koala">Koala 🐨</option>
+                <option value="emoji-penguin">Penguin 🐧</option>
+                <option value="emoji-bubbletea">Bubble Tea 🧋</option>
+                <option value="emoji-sandwich">Sandwich 🥪</option>
+                <option value="emoji-tangerine">Tangerine 🍊</option>
             </select>
             <input type="number" id="latitude" placeholder="Latitude (e.g., 52.5200)" step="any">
             <input type="number" id="longitude" placeholder="Longitude (e.g., 13.4050)" step="any">
@@ -327,31 +353,39 @@
         }
 
         function goToSignUp() {
-            window.location.href = '/signup.html';
+            console.log("Redirecting to signup.html");
+            window.location.assign('/signup.html');
         }
 
         function signIn() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const authError = document.getElementById('auth-error');
-
             authError.textContent = '';
+            authError.classList.remove('show');
+
             auth.signInWithEmailAndPassword(email, password)
                 .then(() => {
                     // Handled by onAuthStateChanged
                 })
                 .catch((error) => {
                     authError.textContent = error.message;
+                    authError.classList.add('show');
                 });
         }
 
         function signOut() {
+            const locationError = document.getElementById('location-error');
+            const locationSuccess = document.getElementById('location-success');
+            locationError.textContent = '';
+            locationSuccess.textContent = '';
+            locationError.classList.remove('show');
+            locationSuccess.classList.remove('show');
+
             auth.signOut()
                 .then(() => {
                     document.getElementById('location-section').style.display = 'none';
                     document.getElementById('auth-section').style.display = 'block';
-                    document.getElementById('location-error').textContent = '';
-                    document.getElementById('location-success').textContent = '';
                     if (map) {
                         map.remove();
                         map = null;
@@ -359,7 +393,8 @@
                     }
                 })
                 .catch((error) => {
-                    document.getElementById('location-error').textContent = error.message;
+                    locationError.textContent = error.message;
+                    locationError.classList.add('show');
                 });
         }
 
@@ -398,15 +433,27 @@
                 });
         }
 
+        function showNotification(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.classList.add(type);
+            setTimeout(() => {
+                element.textContent = '';
+                element.classList.remove(type);
+            }, 3000);
+        }
+
         function updateLocation() {
             const user = auth.currentUser;
             const locationError = document.getElementById('location-error');
             const locationSuccess = document.getElementById('location-success');
             locationError.textContent = '';
             locationSuccess.textContent = '';
+            locationError.classList.remove('show');
+            locationSuccess.classList.remove('show');
 
             if (!user) {
-                locationError.textContent = 'Please sign in first.';
+                showNotification('location-error', 'Please sign in first.', 'show');
                 return;
             }
 
@@ -418,7 +465,7 @@
             const files = document.getElementById('photo-upload').files;
 
             if (!name || (!marker && (isNaN(latitude) || isNaN(longitude))) || !markerIcon) {
-                locationError.textContent = 'Please provide a name, select a location (via map or coordinates), and choose an icon.';
+                showNotification('location-error', 'Please provide a name, select a location (via map or coordinates), and choose an icon.', 'show');
                 return;
             }
 
@@ -435,7 +482,6 @@
 
             Promise.all(uploadPromises)
                 .then(() => {
-                    // Fetch existing photos to preserve them if no new uploads
                     return database.ref(`stands/${user.uid}/location`).once('value')
                         .then((snapshot) => {
                             const existingData = snapshot.val();
@@ -454,13 +500,13 @@
                         });
                 })
                 .then(() => {
-                    locationSuccess.textContent = 'Stand updated successfully!';
+                    showNotification('location-success', 'Stand updated successfully!', 'show');
                     setTimeout(() => {
                         window.location.href = '/';
                     }, 2000);
                 })
                 .catch((error) => {
-                    locationError.textContent = error.message;
+                    showNotification('location-error', error.message, 'show');
                 });
         }
 
@@ -470,17 +516,19 @@
             const locationSuccess = document.getElementById('location-success');
             locationError.textContent = '';
             locationSuccess.textContent = '';
+            locationError.classList.remove('show');
+            locationSuccess.classList.remove('show');
 
             if (user) {
                 database.ref(`stands/${user.uid}/location`).update({ status: status })
                     .then(() => {
-                        locationSuccess.textContent = 'Stand removed successfully!';
+                        showNotification('location-success', 'Stand removed successfully!', 'show');
                         setTimeout(() => {
                             window.location.href = '/';
                         }, 2000);
                     })
                     .catch((error) => {
-                        locationError.textContent = error.message;
+                        showNotification('location-error', error.message, 'show');
                     });
             }
         }
@@ -492,6 +540,9 @@
             authError.textContent = '';
             locationError.textContent = '';
             locationSuccess.textContent = '';
+            authError.classList.remove('show');
+            locationError.classList.remove('show');
+            locationSuccess.classList.remove('show');
 
             if (user) {
                 document.getElementById('auth-section').style.display = 'none';
@@ -508,7 +559,7 @@
             }
         }, (error) => {
             console.error("Auth state change error:", error);
-            document.getElementById('auth-error').textContent = 'Authentication error. Please try again.';
+            showNotification('auth-error', 'Authentication error. Please try again.', 'show');
             document.getElementById('auth-section').style.display = 'block';
             document.getElementById('location-section').style.display = 'none';
         });
