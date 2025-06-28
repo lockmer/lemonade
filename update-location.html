@@ -298,6 +298,27 @@
                 <option value="emoji-bubbletea">Bubble Tea 🧋</option>
                 <option value="emoji-sandwich">Sandwich 🥪</option>
                 <option value="emoji-tangerine">Tangerine 🍊</option>
+                <option value="emoji-volcano">Volcano 🌋</option>
+                <option value="emoji-scorpion">Scorpion 🦂</option>
+                <option value="emoji-rollercoaster">Roller Coaster 🎢</option>
+                <option value="emoji-firecracker">Firecracker 🧨</option>
+                <option value="emoji-sparkler">Sparkler 🎇</option>
+                <option value="emoji-tiger">Tiger 🐯</option>
+                <option value="emoji-zebra">Zebra 🦓</option>
+                <option value="emoji-giraffe">Giraffe 🦒</option>
+                <option value="emoji-elephant">Elephant 🐘</option>
+                <option value="emoji-rhino">Rhinoceros 🦏</option>
+                <option value="emoji-crown">Crown 👑</option>
+                <option value="emoji-gem">Gem 💎</option>
+                <option value="emoji-bomb">Bomb 💣</option>
+                <option value="emoji-dagger">Dagger 🗡️</option>
+                <option value="emoji-microphone">Microphone 🎤</option>
+                <option value="emoji-drum">Drum 🥁</option>
+                <option value="emoji-trumpet">Trumpet 🎺</option>
+                <option value="emoji-disco">Disco Ball 🪩</option>
+                <option value="emoji-ferris">Ferris Wheel 🎡</option>
+                <option value="emoji-comet">Comet ☄️</option>
+                <option value="emoji-ninja">Ninja 🥷</option>
             </select>
             <input type="number" id="latitude" placeholder="Latitude (e.g., 52.5200)" step="any">
             <input type="number" id="longitude" placeholder="Longitude (e.g., 13.4050)" step="any">
@@ -335,6 +356,69 @@
 
         let map, marker;
 
+        const iconMap = {
+            'pin-blue': L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png', iconSize: [24, 24], iconAnchor: [12, 24], popupAnchor: [0, -24] }),
+            'pin-red': L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png', iconSize: [24, 24], iconAnchor: [12, 24], popupAnchor: [0, -24] }),
+            'pin-green': L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png', iconSize: [24, 24], iconAnchor: [12, 24], popupAnchor: [0, -24] }),
+            'pin-yellow': L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png', iconSize: [24, 24], iconAnchor: [12, 24], popupAnchor: [0, -24] }),
+            'pin-purple': L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png', iconSize: [24, 24], iconAnchor: [12, 24], popupAnchor: [0, -24] }),
+            'pin-orange': L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png', iconSize: [24, 24], iconAnchor: [12, 24], popupAnchor: [0, -24] }),
+            'circle-blue': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: blue; width: 20px; height: 20px; border-radius: 50%;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'circle-red': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: red; width: 20px; height: 20px; border-radius: 50%;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'circle-green': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: green; width: 20px; height: 20px; border-radius: 50%;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'circle-yellow': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px; border-radius: 50%;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'circle-purple': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: purple; width: 20px; height: 20px; border-radius: 50%;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'circle-orange': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: orange; width: 20px; height: 20px; border-radius: 50%;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'square-blue': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: blue; width: 20px; height: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'square-red': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: red; width: 20px; height: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'square-green': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: green; width: 20px; height: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'square-yellow': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'square-purple': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: purple; width: 20px; height: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'square-orange': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: orange; width: 20px; height: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'star-blue': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: blue; width: 20px; height: 20px; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'star-red': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: red; width: 20px; height: 20px; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'star-green': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: green; width: 20px; height: 20px; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'star-yellow': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'star-purple': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: purple; width: 20px; height: 20px; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'star-orange': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: orange; width: 20px; height: 20px; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'heart-blue': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: blue; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 40%, 80% 100%, 50% 80%, 20% 100%, 0% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'heart-red': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: red; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 40%, 80% 100%, 50% 80%, 20% 100%, 0% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'heart-green': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: green; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 40%, 80% 100%, 50% 80%, 20% 100%, 0% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'heart-yellow': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 40%, 80% 100%, 50% 80%, 20% 100%, 0% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'heart-purple': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: purple; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 40%, 80% 100%, 50% 80%, 20% 100%, 0% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'heart-orange': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: orange; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 40%, 80% 100%, 50% 80%, 20% 100%, 0% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'diamond-blue': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: blue; width: 20px; height: 20px; transform: rotate(45deg);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'diamond-red': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: red; width: 20px; height: 20px; transform: rotate(45deg);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'diamond-green': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: green; width: 20px; height: 20px; transform: rotate(45deg);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'diamond-yellow': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px; transform: rotate(45deg);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'diamond-purple': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: purple; width: 20px; height: 20px; transform: rotate(45deg);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'diamond-orange': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: orange; width: 20px; height: 20px; transform: rotate(45deg);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'triangle-blue': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: blue; width: 20px; height: 20px; clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'triangle-red': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: red; width: 20px; height: 20px; clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'triangle-green': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: green; width: 20px; height: 20px; clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'triangle-yellow': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px; clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'triangle-purple': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: purple; width: 20px; height: 20px; clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'triangle-orange': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: orange; width: 20px; height: 20px; clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'hexagon-blue': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: blue; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'hexagon-red': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: red; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'hexagon-green': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: green; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'hexagon-yellow': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'hexagon-purple': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: purple; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'hexagon-orange': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: orange; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'octagon-blue': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: blue; width: 20px; height: 20px; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'octagon-red': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: red; width: 20px; height: 20px; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'octagon-green': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: green; width: 20px; height: 20px; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'octagon-yellow': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'octagon-purple': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: purple; width: 20px; height: 20px; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'octagon-orange': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: orange; width: 20px; height: 20px; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'cross-blue': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: blue; width: 20px; height: 20px; clip-path: polygon(40% 0%, 60% 0%, 60% 40%, 100% 40%, 100% 60%, 60% 60%, 60% 100%, 40% 100%, 40% 60%, 0% 60%, 0% 40%, 40% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'cross-red': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: red; width: 20px; height: 20px; clip-path: polygon(40% 0%, 60% 0%, 60% 40%, 100% 40%, 100% 60%, 60% 60%, 60% 100%, 40% 100%, 40% 60%, 0% 60%, 0% 40%, 40% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'cross-green': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: green; width: 20px; height: 20px; clip-path: polygon(40% 0%, 60% 0%, 60% 40%, 100% 40%, 100% 60%, 60% 60%, 60% 100%, 40% 100%, 40% 60%, 0% 60%, 0% 40%, 40% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'cross-yellow': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px; clip-path: polygon(40% 0%, 60% 0%, 60% 40%, 100% 40%, 100% 60%, 60% 60%, 60% 100%, 40% 100%, 40% 60%, 0% 60%, 0% 40%, 40% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'cross-purple': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: purple; width: 20px; height: 20px; clip-path: polygon(40% 0%, 60% 0%, 60% 40%, 100% 40%, 100% 60%, 60% 60%, 60% 100%, 40% 100%, 40% 60%, 0% 60%, 0% 40%, 40% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+            'cross-orange': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: orange; width: 20px; height: 20px; clip-path: polygon(40% 0%, 60% 0%, 60% 40%, 100% 40%, 100% 60%, 60% 60%, 60% 100%, 40% 100%, 40% 60%, 0% 60%, 0% 40%, 40% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] })
+        };
+
         function initMap(lat = 52.5200, lng = 13.4050) {
             map = L.map('map').setView([lat, lng], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -345,7 +429,8 @@
                 if (marker) {
                     map.removeLayer(marker);
                 }
-                marker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(map);
+                const iconValue = document.getElementById('markerIcon').value;
+                marker = L.marker([e.latlng.lat, e.latlng.lng], { icon: iconMap[iconValue] || L.divIcon({ className: 'custom-icon', html: `<span style="font-size: 20px;">${iconValue.split('-')[1]}</span>`, iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }) }).addTo(map);
                 document.getElementById('latitude').value = e.latlng.lat.toFixed(6);
                 document.getElementById('longitude').value = e.latlng.lng.toFixed(6);
             });
@@ -393,8 +478,7 @@
                     }
                 })
                 .catch((error) => {
-                    locationError.textContent = error.message;
-                    locationError.classList.add('show');
+                    showNotification('location-error', error.message, 'show');
                 });
         }
 
@@ -410,7 +494,7 @@
                         document.getElementById('longitude').value = data.lng ? data.lng.toFixed(6) : '';
                         if (data.lat && data.lng) {
                             initMap(data.lat, data.lng);
-                            marker = L.marker([data.lat, data.lng]).addTo(map);
+                            marker = L.marker([data.lat, data.lng], { icon: iconMap[data.markerIcon] || L.divIcon({ className: 'custom-icon', html: `<span style="font-size: 20px;">${data.markerIcon.split('-')[1]}</span>`, iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }) }).addTo(map);
                         } else {
                             initMap();
                         }
@@ -429,6 +513,7 @@
                 })
                 .catch((error) => {
                     console.error("Error loading stand data:", error);
+                    showNotification('location-error', 'Failed to load stand data.', 'show');
                     initMap();
                 });
         }
