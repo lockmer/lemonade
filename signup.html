@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up for Lemonade Stand</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #fff;
+            color: #000;
+        }
+        h2 {
+            font-size: 1.8em;
+            margin: 20px 0;
+        }
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 90%;
+            max-width: 600px;
+        }
+        input, button {
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 1em;
+            width: 100%;
+            max-width: 300px;
+            border: 1px solid #000;
+            border-radius: 5px;
+            background-color: #fff;
+            color: #000;
+        }
+        button {
+            cursor: pointer;
+            background-color: #000;
+            color: #fff;
+        }
+        button:hover {
+            background-color: #333;
+        }
+        .error {
+            font-size: 0.9em;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            width: 100%;
+            max-width: 300px;
+            color: #fff;
+            background-color: #d32f2f;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .error.show {
+            opacity: 1;
+        }
+        .back-link {
+            font-size: 1em;
+            color: #000;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Sign Up</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password">
+        <input type="password" id="confirm-password" placeholder="Confirm Password">
+        <button onclick="signUp()">Sign Up</button>
+        <p class="error" id="signup-error"></p>
+        <a href="/update-location.html" class="back-link">Back to Sign In</a>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCLKalm4eWV5L8IHEePlBZGaFwPN0RuyVM",
+            authDomain: "lemonade-bdb2f.firebaseapp.com",
+            databaseURL: "https://lemonade-bdb2f-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "lemonade-bdb2f",
+            storageBucket: "lemonade-bdb2f.firebasestorage.app",
+            messagingSenderId: "557489157751",
+            appId: "1:557489157751:web:d76a36ec0e942249a67872",
+            measurementId: "G-6NQ028JLGK"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        function signUp() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const signupError = document.getElementById('signup-error');
+            signupError.textContent = '';
+            signupError.classList.remove('show');
+
+            if (password !== confirmPassword) {
+                signupError.textContent = 'Passwords do not match.';
+                signupError.classList.add('show');
+                return;
+            }
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .then(() => {
+                    console.log("User signed up successfully");
+                    window.location.assign('/update-location.html');
+                })
+                .catch((error) => {
+                    signupError.textContent = error.message;
+                    signupError.classList.add('show');
+                    console.error("Sign-up error:", error);
+                });
+        }
+    </script>
+</body>
+</html>
