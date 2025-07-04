@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,54 +10,107 @@
         body {
             margin: 0;
             font-family: Arial, sans-serif;
-            background-color: #fff9c4;
-            color: #000;
             display: flex;
             flex-direction: column;
             align-items: center;
+            background-color: #fff9c4;
+            color: #333;
+        }
+        p {
+            font-size: 1.2em;
+            text-align: center;
+            max-width: 80%;
+            margin-bottom: 20px;
         }
         #map {
-            height: 90vh;
-            width: 100%;
-            max-width: 1200px;
+            height: 70vh;
+            width: 90%;
+            max-width: 800px;
             border: 2px solid #fbc02d;
             border-radius: 10px;
             z-index: 1;
         }
-        .stand-info {
-            margin: 20px;
-            text-align: center;
-        }
-        .stand-info img {
-            max-width: 100px;
-            max-height: 100px;
-            margin: 5px;
-            border: 1px solid #000;
-            border-radius: 5px;
-        }
-        .back-link {
-            font-size: 1em;
-            color: #000;
+        .transparent-link {
+            color: transparent;
+            background-color: transparent;
             text-decoration: none;
-            margin: 10px 0;
-            display: none;
+            font-size: 1.2em;
+            display: inline-block;
+            padding: 10px;
+            width: 100px;
+            text-align: center;
+            margin-top: 10px;
         }
-        .back-link:hover {
-            text-decoration: underline;
+        .transparent-link:hover {
+            background-color: rgba(251, 192, 45, 0.2);
         }
-        .back-link.visible {
+        .popup-content img {
+            max-width: 100px;
+            margin: 5px;
+        }
+        .custom-div-icon {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+        }
+        .star-icon::before {
+            content: '\2605';
             display: block;
         }
-        .leaflet-popup-content {
-            white-space: pre-wrap;
+        .heart-icon::before {
+            content: '\2764';
+            display: block;
+        }
+        .diamond-icon {
+            transform: rotate(45deg);
+        }
+        .triangle-icon {
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 20px solid;
+        }
+        .hexagon-icon {
+            width: 20px;
+            height: 11.5px;
+            position: relative;
+            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+        }
+        .octagon-icon {
+            width: 20px;
+            height: 20px;
+            clip-path: polygon(29.29% 0%, 70.71% 0%, 100% 29.29%, 100% 70.71%, 70.71% 100%, 29.29% 100%, 0% 70.71%, 0% 29.29%);
+        }
+        .cross-icon {
+            width: 20px;
+            height: 20px;
+            position: relative;
+        }
+        .cross-icon::before, .cross-icon::after {
+            content: '';
+            position: absolute;
+            background: currentColor;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .cross-icon::before {
+            width: 20px;
+            height: 4px;
+        }
+        .cross-icon::after {
+            width: 4px;
+            height: 20px;
         }
     </style>
 </head>
 <body>
+    <p><a href="/update-location.html" class="transparent-link">sign in</a></p>
     <div id="map"></div>
-    <div class="stand-info" id="stand-info"></div>
-    <a href="/update-location.html" class="back-link" id="update-stand-link">Update Your Stand</a>
 
+    <!-- Firebase and Leaflet Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -67,235 +121,224 @@
             authDomain: "lemonade-bdb2f.firebaseapp.com",
             databaseURL: "https://lemonade-bdb2f-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "lemonade-bdb2f",
-            storageBucket: "lemonade-bdb2f.firebaseapp.com",
+            storageBucket: "lemonade-bdb2f.firebasestorage.app",
             messagingSenderId: "557489157751",
             appId: "1:557489157751:web:d76a36ec0e942249a67872",
             measurementId: "G-6NQ028JLGK"
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const database = firebase.database();
+        try {
+            // Initialize Firebase
+            firebase.initializeApp(firebaseConfig);
+            const auth = firebase.auth();
+            const database = firebase.database();
+            console.log("Firebase initialized successfully");
 
-        let map;
-
-        const iconMap = {
-            'pin-blue': L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png', iconSize: [24, 24], iconAnchor: [12, 24], popupAnchor: [0, -24] }),
-            'pin-red': L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png', iconSize: [24, 24], iconAnchor: [12, 24], popupAnchor: [0, -24] }),
-            'pin-green': L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png', iconSize: [24, 24], iconAnchor: [12, 24], popupAnchor: [0, -24] }),
-            'pin-yellow': L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png', iconSize: [24, 24], iconAnchor: [12, 24], popupAnchor: [0, -24] }),
-            'pin-purple': L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png', iconSize: [24, 24], iconAnchor: [12, 24], popupAnchor: [0, -24] }),
-            'pin-orange': L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png', iconSize: [24, 24], iconAnchor: [12, 24], popupAnchor: [0, -24] }),
-            'circle-blue': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: blue; width: 20px; height: 20px; border-radius: 50%;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'circle-red': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: red; width: 20px; height: 20px; border-radius: 50%;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'circle-green': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: green; width: 20px; height: 20px; border-radius: 50%;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'circle-yellow': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px; border-radius: 50%;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'circle-purple': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: purple; width: 20px; height: 20px; border-radius: 50%;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'circle-orange': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: orange; width: 20px; height: 20px; border-radius: 50%;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'square-blue': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: blue; width: 20px; height: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'square-red': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: red; width: 20px; height: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'square-green': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: green; width: 20px; height: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'square-yellow': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'square-purple': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: purple; width: 20px; height: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'square-orange': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: orange; width: 20px; height: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'star-blue': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: blue; width: 20px; height: 20px; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'star-red': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: red; width: 20px; height: 20px; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'star-green': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: green; width: 20px; height: 20px; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'star-yellow': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'star-purple': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: purple; width: 20px; height: 20px; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'star-orange': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: orange; width: 20px; height: 20px; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'heart-blue': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: blue; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 40%, 80% 100%, 50% 80%, 20% 100%, 0% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'heart-red': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: red; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 40%, 80% 100%, 50% 80%, 20% 100%, 0% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'heart-green': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: green; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 40%, 80% 100%, 50% 80%, 20% 100%, 0% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'heart-yellow': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 40%, 80% 100%, 50% 80%, 20% 100%, 0% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'heart-purple': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: purple; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 40%, 80% 100%, 50% 80%, 20% 100%, 0% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'heart-orange': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: orange; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 40%, 80% 100%, 50% 80%, 20% 100%, 0% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'diamond-blue': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: blue; width: 20px; height: 20px; transform: rotate(45deg);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'diamond-red': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: red; width: 20px; height: 20px; transform: rotate(45deg);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'diamond-green': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: green; width: 20px; height: 20px; transform: rotate(45deg);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'diamond-yellow': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px; transform: rotate(45deg);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'diamond-purple': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: purple; width: 20px; height: 20px; transform: rotate(45deg);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'diamond-orange': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: orange; width: 20px; height: 20px; transform: rotate(45deg);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'triangle-blue': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: blue; width: 20px; height: 20px; clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'triangle-red': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: red; width: 20px; height: 20px; clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'triangle-green': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: green; width: 20px; height: 20px; clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'triangle-yellow': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px; clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'triangle-purple': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: purple; width: 20px; height: 20px; clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'triangle-orange': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: orange; width: 20px; height: 20px; clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'hexagon-blue': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: blue; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'hexagon-red': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: red; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'hexagon-green': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: green; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'hexagon-yellow': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'hexagon-purple': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: purple; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'hexagon-orange': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: orange; width: 20px; height: 20px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'octagon-blue': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: blue; width: 20px; height: 20px; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'octagon-red': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: red; width: 20px; height: 20px; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'octagon-green': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: green; width: 20px; height: 20px; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'octagon-yellow': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'octagon-purple': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: purple; width: 20px; height: 20px; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'octagon-orange': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: orange; width: 20px; height: 20px; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'cross-blue': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: blue; width: 20px; height: 20px; clip-path: polygon(40% 0%, 60% 0%, 60% 40%, 100% 40%, 100% 60%, 60% 60%, 60% 100%, 40% 100%, 40% 60%, 0% 60%, 0% 40%, 40% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'cross-red': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: red; width: 20px; height: 20px; clip-path: polygon(40% 0%, 60% 0%, 60% 40%, 100% 40%, 100% 60%, 60% 60%, 60% 100%, 40% 100%, 40% 60%, 0% 60%, 0% 40%, 40% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'cross-green': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: green; width: 20px; height: 20px; clip-path: polygon(40% 0%, 60% 0%, 60% 40%, 100% 40%, 100% 60%, 60% 60%, 60% 100%, 40% 100%, 40% 60%, 0% 60%, 0% 40%, 40% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'cross-yellow': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px; clip-path: polygon(40% 0%, 60% 0%, 60% 40%, 100% 40%, 100% 60%, 60% 60%, 60% 100%, 40% 100%, 40% 60%, 0% 60%, 0% 40%, 40% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'cross-purple': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: purple; width: 20px; height: 20px; clip-path: polygon(40% 0%, 60% 0%, 60% 40%, 100% 40%, 100% 60%, 60% 60%, 60% 100%, 40% 100%, 40% 60%, 0% 60%, 0% 40%, 40% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'cross-orange': L.divIcon({ className: 'custom-icon', html: '<div style="background-color: orange; width: 20px; height: 20px; clip-path: polygon(40% 0%, 60% 0%, 60% 40%, 100% 40%, 100% 60%, 60% 60%, 60% 100%, 40% 100%, 40% 60%, 0% 60%, 0% 40%, 40% 40%);"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-lemon': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🍋</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-lime': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🍋‍🟩</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-peach': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🍑</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-eggplant': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🍆</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-sweat': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">💦</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-kiss': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">💋</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-wink': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">😘</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-tongue': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">😛</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-hot': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🌶️</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-fire': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🔥</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-lips': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">👄</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-heart-eyes': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">😍</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-wink2': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">😜</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-devil': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">😈</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-flirt': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">😘</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-banana': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🍌</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-cherry': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🍒</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-sparkles': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">✨</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-sunglasses': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">😎</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-poop': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">💩</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-crazy': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">😜</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-drunk': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🥴</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-rocket': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🚀</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-party': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🎉</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-clown': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🤡</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-unicorn': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🦄</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-alien': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">👽</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-ghost': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">👻</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-robot': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🤖</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-handcuffs': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🖤</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-lingerie': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">👙</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-lipstick': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">💄</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-high-heel': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">👠</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-droplet': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">💧</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-tantric': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🧘‍♀️</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-wine': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🍷</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-champagne': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🥂</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-cocktail': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🍹</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-whisky': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🥃</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-sake': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🍶</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-volcano': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🌋</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-firecracker': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🧨</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-sparkler': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🎇</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-dagger': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🗡️</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-bomb': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">💣</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-crown': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">👑</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-gem': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">💎</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-ninja': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🥷</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-disco': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🪩</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-rollercoaster': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🎢</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-comet': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">☄️</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-tiger': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🐯</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-lion': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🦁</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-snake': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🐍</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-scorpion': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🦂</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-dragon': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🐉</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-paw': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🐾</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-koala': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🐨</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-penguin': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🐧</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-zebra': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🦓</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-giraffe': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🦒</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-elephant': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🐘</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-rhino': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🦏</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-otter': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🦦</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-skunk': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🦨</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-frog': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🐸</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-monkey': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🙈</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-pig': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🐷</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-dinosaur': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🦖</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-turkey': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🦃</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-llama': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🦙</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-sloth': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🦥</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-heart': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">❤️</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-thumbsup': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">👍</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-clap': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">👏</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-guitar': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🎸</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-microphone': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🎤</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-drum': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🥁</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-trumpet': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🎺</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-bubbletea': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🧋</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-hat': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🎉</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-umbrella': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">☂️</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-lollipop': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🍭</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-cupcake': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🧁</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-popcorn': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🍿</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-juice': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🧃</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-paintbrush': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🎨</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-bicycle': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🚴‍♀️</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-balloon': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🎈</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-gift': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🎁</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-rainbow': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🌈</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-star': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🌟</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-cloud': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">☁️</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-moon': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🌙</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-sun': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">☀️</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-butterfly': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🦋</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-ferris': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🎡</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-tantric2': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">🧘‍♂️</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-wink3': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">😉</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-tongue2': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">😝</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-smirk': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">😏</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-eyes': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">👀</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-tongue3': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">👅</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-laugh': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">😆</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-wink4': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">😙</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-blush': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">😳</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
-            'emoji-seduce': L.divIcon({ className: 'custom-icon', html: '<span style="font-size: 20px;">😘</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] })
-        };
-
-        function initMap() {
-            map = L.map('map').setView([52.5200, 13.4050], 10);
+            // Initialize Leaflet Map
+            const map = L.map('map').setView([52.5200, 13.4050], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
+            console.log("Map initialized successfully");
 
-            database.ref('stands').once('value')
-                .then((snapshot) => {
-                    const stands = snapshot.val();
-                    if (stands) {
-                        for (const uid in stands) {
-                            const stand = stands[uid].location;
-                            if (stand && stand.status === 'active') {
-                                const marker = L.marker([stand.lat, stand.lng], {
-                                    icon: iconMap[stand.markerIcon] || L.divIcon({ className: 'custom-icon', html: `<span style="font-size: 20px;">${stand.markerIcon.split('-')[1]}</span>`, iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] })
-                                }).addTo(map);
+            const icons = {
+                'pin-blue': L.icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34] }),
+                'pin-red': L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34] }),
+                'pin-green': L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34] }),
+                'pin-yellow': L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-yellow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34] }),
+                'pin-purple': L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34] }),
+                'pin-orange': L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34] }),
+                'circle-blue': L.divIcon({ className: 'custom-div-icon', html: '<div style="background-color: blue; width: 20px; height: 20px; border-radius: 50%; border: 2px solid black;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'circle-red': L.divIcon({ className: 'custom-div-icon', html: '<div style="background-color: red; width: 20px; height: 20px; border-radius: 50%; border: 2px solid black;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'circle-green': L.divIcon({ className: 'custom-div-icon', html: '<div style="background-color: green; width: 20px; height: 20px; border-radius: 50%; border: 2px solid black;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'circle-yellow': L.divIcon({ className: 'custom-div-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px; border-radius: 50%; border: 2px solid black;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'circle-purple': L.divIcon({ className: 'custom-div-icon', html: '<div style="background-color: purple; width: 20px; height: 20px; border-radius: 50%; border: 2px solid black;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'circle-orange': L.divIcon({ className: 'custom-div-icon', html: '<div style="background-color: orange; width: 20px; height: 20px; border-radius: 50%; border: 2px solid black;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'square-blue': L.divIcon({ className: 'custom-div-icon', html: '<div style="background-color: blue; width: 20px; height: 20px; border: 2px solid black;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'square-red': L.divIcon({ className: 'custom-div-icon', html: '<div style="background-color: red; width: 20px; height: 20px; border: 2px solid black;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'square-green': L.divIcon({ className: 'custom-div-icon', html: '<div style="background-color: green; width: 20px; height: 20px; border: 2px solid black;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'square-yellow': L.divIcon({ className: 'custom-div-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px; border: 2px solid black;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'square-purple': L.divIcon({ className: 'custom-div-icon', html: '<div style="background-color: purple; width: 20px; height: 20px; border: 2px solid black;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'square-orange': L.divIcon({ className: 'custom-div-icon', html: '<div style="background-color: orange; width: 20px; height: 20px; border: 2px solid black;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'star-blue': L.divIcon({ className: 'custom-div-icon star-icon', html: '<div style="color: blue; font-size: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'star-red': L.divIcon({ className: 'custom-div-icon star-icon', html: '<div style="color: red; font-size: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'star-green': L.divIcon({ className: 'custom-div-icon star-icon', html: '<div style="color: green; font-size: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'star-yellow': L.divIcon({ className: 'custom-div-icon star-icon', html: '<div style="color: yellow; font-size: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'star-purple': L.divIcon({ className: 'custom-div-icon star-icon', html: '<div style="color: purple; font-size: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'star-orange': L.divIcon({ className: 'custom-div-icon star-icon', html: '<div style="color: orange; font-size: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'heart-blue': L.divIcon({ className: 'custom-div-icon heart-icon', html: '<div style="color: blue; font-size: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'heart-red': L.divIcon({ className: 'custom-div-icon heart-icon', html: '<div style="color: red; font-size: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'heart-green': L.divIcon({ className: 'custom-div-icon heart-icon', html: '<div style="color: green; font-size: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'heart-yellow': L.divIcon({ className: 'custom-div-icon heart-icon', html: '<div style="color: yellow; font-size: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'heart-purple': L.divIcon({ className: 'custom-div-icon heart-icon', html: '<div style="color: purple; font-size: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'heart-orange': L.divIcon({ className: 'custom-div-icon heart-icon', html: '<div style="color: orange; font-size: 20px;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'diamond-blue': L.divIcon({ className: 'custom-div-icon diamond-icon', html: '<div style="background-color: blue; width: 20px; height: 20px; border: 2px solid black;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'diamond-red': L.divIcon({ className: 'custom-div-icon diamond-icon', html: '<div style="background-color: red; width: 20px; height: 20px; border: 2px solid black;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'diamond-green': L.divIcon({ className: 'custom-div-icon diamond-icon', html: '<div style="background-color: green; width: 20px; height: 20px; border: 2px solid black;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'diamond-yellow': L.divIcon({ className: 'custom-div-icon diamond-icon', html: '<div style="background-color: yellow; width: 20px; height: 20px; border: 2px solid black;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'diamond-purple': L.divIcon({ className: 'custom-div-icon diamond-icon', html: '<div style="background-color: purple; width: 20px; height: 20px; border: 2px solid black;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'diamond-orange': L.divIcon({ className: 'custom-div-icon diamond-icon', html: '<div style="background-color: orange; width: 20px; height: 20px; border: 2px solid black;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'triangle-blue': L.divIcon({ className: 'custom-div-icon triangle-icon', html: '<div style="border-bottom-color: blue;"></div>', iconSize: [20, 20], iconAnchor: [10, 20], popupAnchor: [0, -20] }),
+                'triangle-red': L.divIcon({ className: 'custom-div-icon triangle-icon', html: '<div style="border-bottom-color: red;"></div>', iconSize: [20, 20], iconAnchor: [10, 20], popupAnchor: [0, -20] }),
+                'triangle-green': L.divIcon({ className: 'custom-div-icon triangle-icon', html: '<div style="border-bottom-color: green;"></div>', iconSize: [20, 20], iconAnchor: [10, 20], popupAnchor: [0, -20] }),
+                'triangle-yellow': L.divIcon({ className: 'custom-div-icon triangle-icon', html: '<div style="border-bottom-color: yellow;"></div>', iconSize: [20, 20], iconAnchor: [10, 20], popupAnchor: [0, -20] }),
+                'triangle-purple': L.divIcon({ className: 'custom-div-icon triangle-icon', html: '<div style="border-bottom-color: purple;"></div>', iconSize: [20, 20], iconAnchor: [10, 20], popupAnchor: [0, -20] }),
+                'triangle-orange': L.divIcon({ className: 'custom-div-icon triangle-icon', html: '<div style="border-bottom-color: orange;"></div>', iconSize: [20, 20], iconAnchor: [10, 20], popupAnchor: [0, -20] }),
+                'hexagon-blue': L.divIcon({ className: 'custom-div-icon hexagon-icon', html: '<div style="background-color: blue;"></div>', iconSize: [20, 11.5], iconAnchor: [10, 5.75], popupAnchor: [0, -5.75] }),
+                'hexagon-red': L.divIcon({ className: 'custom-div-icon hexagon-icon', html: '<div style="background-color: red;"></div>', iconSize: [20, 11.5], iconAnchor: [10, 5.75], popupAnchor: [0, -5.75] }),
+                'hexagon-green': L.divIcon({ className: 'custom-div-icon hexagon-icon', html: '<div style="background-color: green;"></div>', iconSize: [20, 11.5], iconAnchor: [10, 5.75], popupAnchor: [0, -5.75] }),
+                'hexagon-yellow': L.divIcon({ className: 'custom-div-icon hexagon-icon', html: '<div style="background-color: yellow;"></div>', iconSize: [20, 11.5], iconAnchor: [10, 5.75], popupAnchor: [0, -5.75] }),
+                'hexagon-purple': L.divIcon({ className: 'custom-div-icon hexagon-icon', html: '<div style="background-color: purple;"></div>', iconSize: [20, 11.5], iconAnchor: [10, 5.75], popupAnchor: [0, -5.75] }),
+                'hexagon-orange': L.divIcon({ className: 'custom-div-icon hexagon-icon', html: '<div style="background-color: orange;"></div>', iconSize: [20, 11.5], iconAnchor: [10, 5.75], popupAnchor: [0, -5.75] }),
+                'octagon-blue': L.divIcon({ className: 'custom-div-icon octagon-icon', html: '<div style="background-color: blue;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'octagon-red': L.divIcon({ className: 'custom-div-icon octagon-icon', html: '<div style="background-color: red;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'octagon-green': L.divIcon({ className: 'custom-div-icon octagon-icon', html: '<div style="background-color: green;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'octagon-yellow': L.divIcon({ className: 'custom-div-icon octagon-icon', html: '<div style="background-color: yellow;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'octagon-purple': L.divIcon({ className: 'custom-div-icon octagon-icon', html: '<div style="background-color: purple;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'octagon-orange': L.divIcon({ className: 'custom-div-icon octagon-icon', html: '<div style="background-color: orange;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'cross-blue': L.divIcon({ className: 'custom-div-icon cross-icon', html: '<div style="color: blue;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'cross-red': L.divIcon({ className: 'custom-div-icon cross-icon', html: '<div style="color: red;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'cross-green': L.divIcon({ className: 'custom-div-icon cross-icon', html: '<div style="color: green;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'cross-yellow': L.divIcon({ className: 'custom-div-icon cross-icon', html: '<div style="color: yellow;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'cross-purple': L.divIcon({ className: 'custom-div-icon cross-icon', html: '<div style="color: purple;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'cross-orange': L.divIcon({ className: 'custom-div-icon cross-icon', html: '<div style="color: orange;"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-lemon': L.divIcon({ className: 'custom-div-icon', html: '<span>🍋</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-lime': L.divIcon({ className: 'custom-div-icon', html: '<span>🍋‍🟩</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-smile': L.divIcon({ className: 'custom-div-icon', html: '<span>😊</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-flower': L.divIcon({ className: 'custom-div-icon', html: '<span>🌸</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-dog': L.divIcon({ className: 'custom-div-icon', html: '<span>🐶</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-sun': L.divIcon({ className: 'custom-div-icon', html: '<span>☀️</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-butterfly': L.divIcon({ className: 'custom-div-icon', html: '<span>🦋</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-rainbow': L.divIcon({ className: 'custom-div-icon', html: '<span>🌈</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-star': L.divIcon({ className: 'custom-div-icon', html: '<span>🌟</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-heart': L.divIcon({ className: 'custom-div-icon', html: '<span>❤️</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-thumbsup': L.divIcon({ className: 'custom-div-icon', html: '<span>👍</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-clap': L.divIcon({ className: 'custom-div-icon', html: '<span>👏</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-balloon': L.divIcon({ className: 'custom-div-icon', html: '<span>🎈</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-gift': L.divIcon({ className: 'custom-div-icon', html: '<span>🎁</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-tulip': L.divIcon({ className: 'custom-div-icon', html: '<span>🌷</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-sunflower': L.divIcon({ className: 'custom-div-icon', html: '<span>🌻</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-palm': L.divIcon({ className: 'custom-div-icon', html: '<span>🌴</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-cactus': L.divIcon({ className: 'custom-div-icon', html: '<span>🌵</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-cloud': L.divIcon({ className: 'custom-div-icon', html: '<span>☁️</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-moon': L.divIcon({ className: 'custom-div-icon', html: '<span>🌙</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-devil': L.divIcon({ className: 'custom-div-icon', html: '<span>😈</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-peach': L.divIcon({ className: 'custom-div-icon', html: '<span>🍑</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-kiss': L.divIcon({ className: 'custom-div-icon', html: '<span>💋</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-wink': L.divIcon({ className: 'custom-div-icon', html: '<span>😘</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-cherry': L.divIcon({ className: 'custom-div-icon', html: '<span>🍒</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-tongue': L.divIcon({ className: 'custom-div-icon', html: '<span>😛</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-eggplant': L.divIcon({ className: 'custom-div-icon', html: '<span>🍆</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-hot': L.divIcon({ className: 'custom-div-icon', html: '<span>🌶️</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-fire': L.divIcon({ className: 'custom-div-icon', html: '<span>🔥</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-sweat': L.divIcon({ className: 'custom-div-icon', html: '<span>💦</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-wink2': L.divIcon({ className: 'custom-div-icon', html: '<span>😜</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-lips': L.divIcon({ className: 'custom-div-icon', html: '<span>👄</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-banana': L.divIcon({ className: 'custom-div-icon', html: '<span>🍌</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-cocktail': L.divIcon({ className: 'custom-div-icon', html: '<span>🍹</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-whisky': L.divIcon({ className: 'custom-div-icon', html: '<span>🥃</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-sake': L.divIcon({ className: 'custom-div-icon', html: '<span>🍶</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-party': L.divIcon({ className: 'custom-div-icon', html: '<span>🎉</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-rocket': L.divIcon({ className: 'custom-div-icon', html: '<span>🚀</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-heart-eyes': L.divIcon({ className: 'custom-div-icon', html: '<span>😍</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-flirt': L.divIcon({ className: 'custom-div-icon', html: '<span>😘</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-clown': L.divIcon({ className: 'custom-div-icon', html: '<span>🤡</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-unicorn': L.divIcon({ className: 'custom-div-icon', html: '<span>🦄</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-poop': L.divIcon({ className: 'custom-div-icon', html: '<span>💩</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-crazy': L.divIcon({ className: 'custom-div-icon', html: '<span>😜</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-drunk': L.divIcon({ className: 'custom-div-icon', html: '<span>🥴</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-alien': L.divIcon({ className: 'custom-div-icon', html: '<span>👽</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-ghost': L.divIcon({ className: 'custom-div-icon', html: '<span>👻</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-robot': L.divIcon({ className: 'custom-div-icon', html: '<span>🤖</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-monkey': L.divIcon({ className: 'custom-div-icon', html: '<span>🙈</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-pig': L.divIcon({ className: 'custom-div-icon', html: '<span>🐷</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-dinosaur': L.divIcon({ className: 'custom-div-icon', html: '<span>🦖</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-turkey': L.divIcon({ className: 'custom-div-icon', html: '<span>🦃</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-llama': L.divIcon({ className: 'custom-div-icon', html: '<span>🦙</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-sloth': L.divIcon({ className: 'custom-div-icon', html: '<span>🦥</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-otter': L.divIcon({ className: 'custom-div-icon', html: '<span>🦦</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-skunk': L.divIcon({ className: 'custom-div-icon', html: '<span>🦨</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-frog': L.divIcon({ className: 'custom-div-icon', html: '<span>🐸</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-snake': L.divIcon({ className: 'custom-div-icon', html: '<span>🐍</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-taco': L.divIcon({ className: 'custom-div-icon', html: '<span>🌮</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-pizza': L.divIcon({ className: 'custom-div-icon', html: '<span>🍕</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-burger': L.divIcon({ className: 'custom-div-icon', html: '<span>🍔</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-fries': L.divIcon({ className: 'custom-div-icon', html: '<span>🍟</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-icecream': L.divIcon({ className: 'custom-div-icon', html: '<span>🍦</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-donut': L.divIcon({ className: 'custom-div-icon', html: '<span>🍩</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-cake': L.divIcon({ className: 'custom-div-icon', html: '<span>🎂</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-cookie': L.divIcon({ className: 'custom-div-icon', html: '<span>🍪</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-chocolate': L.divIcon({ className: 'custom-div-icon', html: '<span>🍫</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-coffee': L.divIcon({ className: 'custom-div-icon', html: '<span>☕</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-tea': L.divIcon({ className: 'custom-div-icon', html: '<span>🍵</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-sushi': L.divIcon({ className: 'custom-div-icon', html: '<span>🍣</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-ramen': L.divIcon({ className: 'custom-div-icon', html: '<span>🍜</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-pear': L.divIcon({ className: 'custom-div-icon', html: '<span>🍐</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-apple': L.divIcon({ className: 'custom-div-icon', html: '<span>🍎</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-orange': L.divIcon({ className: 'custom-div-icon', html: '<span>🍊</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-strawberry': L.divIcon({ className: 'custom-div-icon', html: '<span>🍓</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-watermelon': L.divIcon({ className: 'custom-div-icon', html: '<span>🍉</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-grapes': L.divIcon({ className: 'custom-div-icon', html: '<span>🍇</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-mango': L.divIcon({ className: 'custom-div-icon', html: '<span>🥭</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-pineapple': L.divIcon({ className: 'custom-div-icon', html: '<span>🍍</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-kiwi': L.divIcon({ className: 'custom-div-icon', html: '<span>🥝</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-avocado': L.divIcon({ className: 'custom-div-icon', html: '<span>🥑</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-broccoli': L.divIcon({ className: 'custom-div-icon', html: '<span>🥦</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-carrot': L.divIcon({ className: 'custom-div-icon', html: '<span>🥕</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-corn': L.divIcon({ className: 'custom-div-icon', html: '<span>🌽</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-mushroom': L.divIcon({ className: 'custom-div-icon', html: '<span>🍄</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-cheese': L.divIcon({ className: 'custom-div-icon', html: '<span>🧀</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-bread': L.divIcon({ className: 'custom-div-icon', html: '<span>🍞</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-pretzel': L.divIcon({ className: 'custom-div-icon', html: '<span>🥨</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-bagel': L.divIcon({ className: 'custom-div-icon', html: '<span>🥯</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-pancakes': L.divIcon({ className: 'custom-div-icon', html: '<span>🥞</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-waffle': L.divIcon({ className: 'custom-div-icon', html: '<span>🧇</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-bacon': L.divIcon({ className: 'custom-div-icon', html: '<span>🥓</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-egg': L.divIcon({ className: 'custom-div-icon', html: '<span>🥚</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-meat': L.divIcon({ className: 'custom-div-icon', html: '<span>🍖</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-poultry': L.divIcon({ className: 'custom-div-icon', html: '<span>🍗</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] }),
+                'emoji-hotdog': L.divIcon({ className: 'custom-div-icon', html: '<span>🌭</span>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] })
+            };
 
-                                let popupContent = `<b>${stand.name}</b>`;
-                                if (stand.bio) {
-                                    popupContent += `<br>${stand.bio}`;
-                                }
-                                if (stand.photos && stand.photos.length > 0) {
-                                    popupContent += '<br>';
-                                    stand.photos.forEach(url => {
-                                        popupContent += `<img src="${url}" style="max-width: 100px; max-height: 100px; margin: 5px;">`;
-                                    });
-                                }
-                                marker.bindPopup(popupContent);
+            const markers = {};
+
+            database.ref('stands').on('value', (snapshot) => {
+                const stands = snapshot.val();
+                console.log("Received Firebase stands data:", stands);
+
+                // Clear existing markers
+                Object.values(markers).forEach(marker => map.removeLayer(marker));
+                Object.keys(markers).forEach(key => delete markers[key]);
+
+                if (stands) {
+                    Object.entries(stands).forEach(([uid, stand]) => {
+                        const location = stand.location;
+                        if (location && location.status === 'active' && location.lat && location.lng && location.name) {
+                            const icon = icons[location.markerIcon] || icons['emoji-lemon'];
+                            const marker = L.marker([location.lat, location.lng], { icon: icon }).addTo(map);
+                            let popupContent = `<b>${location.name}</b>`;
+                            if (location.bio) {
+                                popupContent += `<br>${location.bio}`;
                             }
+                            if (location.photos && location.photos.length > 0) {
+                                popupContent += '<br><div class="popup-content">';
+                                location.photos.forEach(url => {
+                                    popupContent += `<img src="${url}" alt="Stand photo">`;
+                                });
+                                popupContent += '</div>';
+                            }
+                            marker.bindPopup(popupContent).openPopup();
+                            markers[uid] = marker;
+                            console.log(`Added marker for ${location.name}: ${location.markerIcon}`);
                         }
-                    }
-                })
-                .catch((error) => {
-                    console.error("Error loading stands:", error);
-                });
+                    });
+                }
+            }, (error) => {
+                console.error("Firebase listener error:", error);
+            });
+        } catch (error) {
+            console.error("Initialization error:", error);
         }
-
-        auth.onAuthStateChanged((user) => {
-            const updateStandLink = document.getElementById('update-stand-link');
-            if (user) {
-                updateStandLink.classList.add('visible');
-            } else {
-                updateStandLink.classList.remove('visible');
-            }
-        });
-
-        initMap();
     </script>
 </body>
 </html>
