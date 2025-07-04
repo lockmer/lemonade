@@ -9,20 +9,20 @@
         body {
             margin: 0;
             font-family: Arial, sans-serif;
+            background-color: #fff9c4;
+            color: #000;
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #fff9c4;
-            color: #000;
         }
         #map {
-            height: 80vh;
-            width: 90%;
-            max-width: 1000px;
+            height: 90vh;
+            width: 100%;
+            max-width: 1200px;
             border: 2px solid #fbc02d;
             border-radius: 10px;
             z-index: 1;
-            margin-top: 20px;
+            margin: 20px 0;
         }
         .stand-info {
             margin: 20px;
@@ -39,10 +39,14 @@
             font-size: 1em;
             color: #000;
             text-decoration: none;
-            margin-top: 10px;
+            margin: 10px 0;
+            display: none;
         }
         .back-link:hover {
             text-decoration: underline;
+        }
+        .back-link.visible {
+            display: block;
         }
         .leaflet-popup-content {
             white-space: pre-wrap;
@@ -52,7 +56,7 @@
 <body>
     <div id="map"></div>
     <div class="stand-info" id="stand-info"></div>
-    <a href="/update-location.html" class="back-link">Update Your Stand</a>
+    <a href="/update-location.html" class="back-link" id="update-stand-link">Update Your Stand</a>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
@@ -71,6 +75,7 @@
         };
 
         firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const database = firebase.database();
 
         let map;
@@ -174,6 +179,15 @@
                     console.error("Error loading stands:", error);
                 });
         }
+
+        auth.onAuthStateChanged((user) => {
+            const updateStandLink = document.getElementById('update-stand-link');
+            if (user) {
+                updateStandLink.classList.add('visible');
+            } else {
+                updateStandLink.classList.remove('visible');
+            }
+        });
 
         initMap();
     </script>
