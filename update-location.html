@@ -46,6 +46,12 @@
             background-color: #fff;
             color: #000;
         }
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+            max-height: 200px;
+            white-space: pre-wrap;
+        }
         button {
             cursor: pointer;
             background-color: #000;
@@ -119,7 +125,7 @@
         <div id="map"></div>
         <div class="form-container">
             <input type="text" id="name" placeholder="Stand Name">
-            <textarea id="bio" placeholder="Bio (optional)"></textarea>
+            <textarea id="bio" placeholder="Bio (optional, supports multiple lines)"></textarea>
             <select id="markerIcon">
                 <option value="pin-blue">Blue Pin</option>
                 <option value="pin-red">Red Pin</option>
